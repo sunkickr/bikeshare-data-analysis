@@ -1,0 +1,46 @@
+version: 2
+
+# Generic ("schema") tests live in YAML next to the models they test.
+# Run them with `dbt test`. Each test below produces a SQL query under the
+# hood — dbt asserts the query returns 0 rows. You can see the compiled SQL
+# in target/compiled/bikeshare/models/staging/.../tests/.
+
+models:
+  - name: stg_capitalbikeshare__trips
+    description: |
+      Cleaned, type-cast view over the raw Capital Bikeshare trip table.
+      One row per ride. The single source of "what is a ride row" — every
+      downstream marts model that needs Capital Bikeshare ride data goes
+      through this view.
+    columns:
+      - name: ride_id
+        description: Public ride identifier. Unique within this staging view.
+        tests:
+          - unique
+          - not_null
+      - name: started_at
+        description: Ride start timestamp (typed). Filter dashboards by this.
+        tests:
+          - not_null
+      - name: ended_at
+        description: Ride end timestamp. May spill into the next month.
+        tests:
+          - not_null
+      - name: rideable_type
+        description: Bike type.
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['classic_bike', 'electric_bike']
+      - name: member_casual
+        description: Rider type.
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['member', 'casual']
+      - name: system
+        description: Bikeshare system — always 'capitalbikeshare' in this staging model.
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['capitalbikeshare']

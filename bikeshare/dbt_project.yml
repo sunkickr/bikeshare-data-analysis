@@ -1,0 +1,57 @@
+# =============================================================================
+# dbt_project.yml — the entry point for the bikeshare dbt project.
+#
+# Everything here is project-wide configuration. Per-model overrides go inside
+# each .sql file via {{ config(...) }} or in nearby .yml files.
+# =============================================================================
+
+name: 'bikeshare'
+version: '1.0.0'
+profile: 'bikeshare'              # which profile in ~/.dbt/profiles.yml to use
+
+# Where dbt looks for each type of file. Defaults are fine; listing them here
+# so the project's anatomy is explicit at a glance.
+model-paths:    ["models"]        # SELECT statements that become tables/views
+analysis-paths: ["analyses"]      # one-off SQL you run via `dbt compile`, never materialized
+test-paths:     ["tests"]         # custom singular tests (one .sql = one assertion)
+seed-paths:     ["seeds"]         # CSVs loaded via `dbt seed` — for SMALL static data
+macro-paths:    ["macros"]        # reusable Jinja macros
+snapshot-paths: ["snapshots"]     # slowly-changing-dimension snapshots
+
+# Folders dbt deletes when you run `dbt clean`. target/ holds compiled SQL
+# and run artifacts; dbt_packages/ is where `dbt deps` installs packages.
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+# -----------------------------------------------------------------------------
+# Model configuration
+#
+# The convention used here is the standard dbt "staging / marts" layering:
+#
+#   models/staging/   one model per source table — clean, cast, rename only.
+#                     Materialized as VIEWS so they're cheap and always fresh.
+#
+#   models/marts/     business-meaningful models that combine staging models.
+#                     Materialized as TABLES because dashboards query them often
+#                     and we don't want to recompute joins on every chart load.
+#
+# +schema below tells dbt to create the model in a CUSTOM schema. With the
+# default Postgres macro, dbt concatenates the target schema + custom schema:
+# target=analytics, +schema=staging  -->  actual schema = analytics_staging.
+# (We'll override that macro later so the names are cleaner.)
+# -----------------------------------------------------------------------------
+models:
+  bikeshare:
+    staging:
+      +materialized: view
+      +schema: staging
+    intermediate:
+      # Intermediate models are typically views (cheap, transparent) or
+      # ephemeral (compiled inline as CTEs into downstream models, never
+      # persisted). Views here for easy debugging in psql.
+      +materialized: view
+      +schema: intermediate
+    marts:
+      +materialized: table
+      +schema: marts

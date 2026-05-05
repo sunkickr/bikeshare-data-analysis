@@ -1,0 +1,31 @@
+version: 2
+
+sources:
+  - name: citibike
+    description: |
+      Raw monthly trip data from Citi Bike (NYC + Jersey City).
+      Initial dataset is Jersey City (JC- prefix); extending to NYC core
+      involves loading additional monthly files into the same raw table.
+    database: bikeshare
+    schema: raw
+
+    loaded_at_field: _ingested_at
+    freshness:
+      warn_after: {count: 35, period: day}
+      error_after: {count: 60, period: day}
+
+    tables:
+      - name: trips
+        identifier: citibike_trips
+        description: One row per ride. Schema mirrors Capital Bikeshare's (both follow GBFS).
+        columns:
+          - name: ride_id
+            description: Public ride identifier from the source CSV.
+          - name: rideable_type
+            description: Bike type — 'classic_bike' or 'electric_bike'.
+          - name: started_at
+            description: Ride start timestamp (text in raw, cast in staging).
+          - name: ended_at
+            description: Ride end timestamp.
+          - name: member_casual
+            description: "Either 'member' (subscriber) or 'casual' (single ride / day pass)."

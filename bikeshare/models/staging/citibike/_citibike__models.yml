@@ -1,0 +1,34 @@
+version: 2
+
+models:
+  - name: stg_citibike__trips
+    description: |
+      Cleaned, type-cast view over raw.citibike_trips. Mirrors the shape of
+      stg_capitalbikeshare__trips so they can be unioned in the intermediate
+      layer without column-by-column reconciliation.
+    columns:
+      - name: ride_id
+        tests:
+          - unique
+          - not_null
+      - name: started_at
+        tests:
+          - not_null
+      - name: ended_at
+        tests:
+          - not_null
+      - name: rideable_type
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['classic_bike', 'electric_bike']
+      - name: member_casual
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['member', 'casual']
+      - name: system
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['citibike']

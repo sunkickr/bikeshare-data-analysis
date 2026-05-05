@@ -1,0 +1,46 @@
+version: 2
+
+# A "source" in dbt is a pointer to a table that some other process landed in
+# the warehouse — here, scripts/load_raw_csv.sh loaded the CSV into raw.
+#
+# Models reference this via {{ source('capitalbikeshare', 'trips') }}.
+# At compile time, dbt resolves that to: bikeshare.raw.capitalbikeshare_trips.
+
+sources:
+  - name: capitalbikeshare
+    description: |
+      Raw monthly trip data from Capital Bikeshare (Washington DC).
+      Landed by scripts/load_raw_csv.sh from the published S3 archive at
+      https://s3.amazonaws.com/capitalbikeshare-data/index.html
+    database: bikeshare
+    schema: raw
+
+    # `loaded_at_field` + `freshness` together make `dbt source freshness`
+    # check whether new data has been ingested recently. We point at
+    # _ingested_at (which the load script sets) rather than started_at,
+    # because we want to know "did anyone load anything?" not "is the data
+    # itself recent?" — those are different alerts.
+    loaded_at_field: _ingested_at
+    freshness:
+      warn_after: {count: 35, period: day}    # nag if no load in ~5 weeks (monthly cadence + grace)
+      error_after: {count: 60, period: day}   # alarm if no load in 2 months
+
+    tables:
+      - name: trips
+        identifier: capitalbikeshare_trips
+        description: One row per ride. Pre-cast — every column is text.
+        columns:
+          - name: ride_id
+            description: Public ride identifier from the source CSV.
+            # NOTE: we deliberately do NOT add unique/not_null tests here.
+            # The raw landing table can legitimately contain duplicates
+            # across re-ingestions; we enforce uniqueness in the staging
+            # layer where we control deduplication logic.
+          - name: rideable_type
+            description: Bike type — 'classic_bike' or 'electric_bike'.
+          - name: started_at
+            description: Ride start timestamp (text in raw, cast in staging).
+          - name: ended_at
+            description: Ride end timestamp. May fall in the next month.
+          - name: member_casual
+            description: "Either 'member' (subscriber) or 'casual' (single ride / day pass)."

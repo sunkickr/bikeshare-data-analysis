@@ -1,0 +1,129 @@
+============================================================
+refresh_pipeline.sh started: Sun May  3 20:54:48 EDT 2026
+============================================================
+
+--- step 1: load any new CSVs ---
+[skip] already loaded: 202601-capitalbikeshare-tripdata.csv
+[skip] already loaded: 202601-citibike-tripdata_1.csv
+[skip] already loaded: 202601-citibike-tripdata_2.csv
+[skip] already loaded: 202602-capitalbikeshare-tripdata.csv
+[skip] already loaded: JC-202601-citibike-tripdata.csv
+
+loaded: 0   skipped: 5   failed: 0
+load step exit code: 0
+
+--- step 2: dbt build ---
+/Users/davidkoenitzer/bikeshare-data-analysis/.venv/lib/python3.9/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+[0m00:54:51  Running with dbt=1.10.20
+[0m00:54:51  Registered adapter: postgres=1.9.1
+[0m00:54:52  Found 6 models, 38 data tests, 2 sources, 563 macros
+[0m00:54:52  
+[0m00:54:52  Concurrency: 4 threads (target='dev')
+[0m00:54:52  
+[0m00:54:52  1 of 44 START sql view model analytics_staging.stg_capitalbikeshare__trips ..... [RUN]
+[0m00:54:52  2 of 44 START sql view model analytics_staging.stg_citibike__trips ............. [RUN]
+[0m00:54:52  1 of 44 OK created sql view model analytics_staging.stg_capitalbikeshare__trips  [[32mCREATE VIEW[0m in 0.10s]
+[0m00:54:52  2 of 44 OK created sql view model analytics_staging.stg_citibike__trips ........ [[32mCREATE VIEW[0m in 0.10s]
+[0m00:54:52  3 of 44 START test accepted_values_stg_capitalbikeshare__trips_member_casual__member__casual  [RUN]
+[0m00:54:52  4 of 44 START test accepted_values_stg_capitalbikeshare__trips_rideable_type__classic_bike__electric_bike  [RUN]
+[0m00:54:52  5 of 44 START test accepted_values_stg_capitalbikeshare__trips_system__capitalbikeshare  [RUN]
+[0m00:54:52  6 of 44 START test not_null_stg_capitalbikeshare__trips_ended_at ............... [RUN]
+[0m00:54:52  5 of 44 PASS accepted_values_stg_capitalbikeshare__trips_system__capitalbikeshare  [[32mPASS[0m in 0.08s]
+[0m00:54:52  7 of 44 START test not_null_stg_capitalbikeshare__trips_member_casual .......... [RUN]
+[0m00:54:52  3 of 44 PASS accepted_values_stg_capitalbikeshare__trips_member_casual__member__casual  [[32mPASS[0m in 0.43s]
+[0m00:54:52  4 of 44 PASS accepted_values_stg_capitalbikeshare__trips_rideable_type__classic_bike__electric_bike  [[32mPASS[0m in 0.43s]
+[0m00:54:52  6 of 44 PASS not_null_stg_capitalbikeshare__trips_ended_at ..................... [[32mPASS[0m in 0.43s]
+[0m00:54:52  7 of 44 PASS not_null_stg_capitalbikeshare__trips_member_casual ................ [[32mPASS[0m in 0.35s]
+[0m00:54:52  8 of 44 START test not_null_stg_capitalbikeshare__trips_ride_id ................ [RUN]
+[0m00:54:52  9 of 44 START test not_null_stg_capitalbikeshare__trips_rideable_type .......... [RUN]
+[0m00:54:52  10 of 44 START test not_null_stg_capitalbikeshare__trips_started_at ............ [RUN]
+[0m00:54:52  11 of 44 START test not_null_stg_capitalbikeshare__trips_system ................ [RUN]
+[0m00:54:52  11 of 44 PASS not_null_stg_capitalbikeshare__trips_system ...................... [[32mPASS[0m in 0.04s]
+[0m00:54:52  12 of 44 START test unique_stg_capitalbikeshare__trips_ride_id ................. [RUN]
+[0m00:54:52  9 of 44 PASS not_null_stg_capitalbikeshare__trips_rideable_type ................ [[32mPASS[0m in 0.11s]
+[0m00:54:52  13 of 44 START test accepted_values_stg_citibike__trips_member_casual__member__casual  [RUN]
+[0m00:54:52  8 of 44 PASS not_null_stg_capitalbikeshare__trips_ride_id ...................... [[32mPASS[0m in 0.11s]
+[0m00:54:52  14 of 44 START test accepted_values_stg_citibike__trips_rideable_type__classic_bike__electric_bike  [RUN]
+[0m00:54:52  10 of 44 PASS not_null_stg_capitalbikeshare__trips_started_at .................. [[32mPASS[0m in 0.15s]
+[0m00:54:52  15 of 44 START test accepted_values_stg_citibike__trips_system__citibike ....... [RUN]
+[0m00:54:52  15 of 44 PASS accepted_values_stg_citibike__trips_system__citibike ............. [[32mPASS[0m in 0.02s]
+[0m00:54:52  16 of 44 START test not_null_stg_citibike__trips_ended_at ...................... [RUN]
+[0m00:54:53  12 of 44 PASS unique_stg_capitalbikeshare__trips_ride_id ....................... [[32mPASS[0m in 0.35s]
+[0m00:54:53  17 of 44 START test not_null_stg_citibike__trips_member_casual ................. [RUN]
+[0m00:54:54  14 of 44 PASS accepted_values_stg_citibike__trips_rideable_type__classic_bike__electric_bike  [[32mPASS[0m in 1.63s]
+[0m00:54:54  13 of 44 PASS accepted_values_stg_citibike__trips_member_casual__member__casual  [[32mPASS[0m in 1.67s]
+[0m00:54:54  18 of 44 START test not_null_stg_citibike__trips_ride_id ....................... [RUN]
+[0m00:54:54  19 of 44 START test not_null_stg_citibike__trips_rideable_type ................. [RUN]
+[0m00:54:54  16 of 44 PASS not_null_stg_citibike__trips_ended_at ............................ [[32mPASS[0m in 1.62s]
+[0m00:54:54  20 of 44 START test not_null_stg_citibike__trips_started_at .................... [RUN]
+[0m00:54:54  17 of 44 PASS not_null_stg_citibike__trips_member_casual ....................... [[32mPASS[0m in 1.54s]
+[0m00:54:54  21 of 44 START test not_null_stg_citibike__trips_system ........................ [RUN]
+[0m00:54:54  21 of 44 PASS not_null_stg_citibike__trips_system .............................. [[32mPASS[0m in 0.02s]
+[0m00:54:54  22 of 44 START test unique_stg_citibike__trips_ride_id ......................... [RUN]
+[0m00:54:55  19 of 44 PASS not_null_stg_citibike__trips_rideable_type ....................... [[32mPASS[0m in 1.21s]
+[0m00:54:55  18 of 44 PASS not_null_stg_citibike__trips_ride_id ............................. [[32mPASS[0m in 1.21s]
+[0m00:54:55  20 of 44 PASS not_null_stg_citibike__trips_started_at .......................... [[32mPASS[0m in 1.19s]
+[0m00:54:56  22 of 44 PASS unique_stg_citibike__trips_ride_id ............................... [[32mPASS[0m in 1.46s]
+[0m00:54:56  23 of 44 START sql view model analytics_intermediate.int_rides__unioned ........ [RUN]
+[0m00:54:56  23 of 44 OK created sql view model analytics_intermediate.int_rides__unioned ... [[32mCREATE VIEW[0m in 0.02s]
+[0m00:54:56  24 of 44 START test accepted_values_int_rides__unioned_system__capitalbikeshare__citibike  [RUN]
+[0m00:54:56  25 of 44 START test not_null_int_rides__unioned_system ......................... [RUN]
+[0m00:54:56  24 of 44 PASS accepted_values_int_rides__unioned_system__capitalbikeshare__citibike  [[32mPASS[0m in 0.03s]
+[0m00:54:56  25 of 44 PASS not_null_int_rides__unioned_system ............................... [[32mPASS[0m in 0.03s]
+[0m00:54:56  26 of 44 START sql table model analytics_marts.dim_stations .................... [RUN]
+[0m00:54:56  27 of 44 START sql incremental model analytics_marts.fct_rides ................. [RUN]
+[0m00:54:57  27 of 44 OK created sql incremental model analytics_marts.fct_rides ............ [[32mINSERT 0 0[0m in 1.54s]
+[0m00:54:57  28 of 44 START test accepted_values_fct_rides_member_casual__member__casual .... [RUN]
+[0m00:54:57  29 of 44 START test accepted_values_fct_rides_started_dow__False__1__2__3__4__5__6__7  [RUN]
+[0m00:54:57  30 of 44 START test accepted_values_fct_rides_system__capitalbikeshare__citibike  [RUN]
+[0m00:54:58  28 of 44 PASS accepted_values_fct_rides_member_casual__member__casual .......... [[32mPASS[0m in 1.09s]
+[0m00:54:58  29 of 44 PASS accepted_values_fct_rides_started_dow__False__1__2__3__4__5__6__7  [[32mPASS[0m in 1.09s]
+[0m00:54:58  30 of 44 PASS accepted_values_fct_rides_system__capitalbikeshare__citibike ..... [[32mPASS[0m in 1.09s]
+[0m00:54:58  31 of 44 START test no_implausibly_long_rides .................................. [RUN]
+[0m00:54:58  32 of 44 START test not_null_fct_rides_duration_seconds ........................ [RUN]
+[0m00:54:58  33 of 44 START test not_null_fct_rides_ride_id ................................. [RUN]
+[0m00:54:59  31 of 44 WARN 1131 no_implausibly_long_rides ................................... [[33mWARN 1131[0m in 0.99s]
+[0m00:54:59  33 of 44 PASS not_null_fct_rides_ride_id ....................................... [[32mPASS[0m in 0.99s]
+[0m00:54:59  32 of 44 PASS not_null_fct_rides_duration_seconds .............................. [[32mPASS[0m in 0.99s]
+[0m00:54:59  34 of 44 START test not_null_fct_rides_started_at .............................. [RUN]
+[0m00:54:59  35 of 44 START test not_null_fct_rides_started_dow ............................. [RUN]
+[0m00:54:59  36 of 44 START test not_null_fct_rides_system .................................. [RUN]
+[0m00:55:00  36 of 44 PASS not_null_fct_rides_system ........................................ [[32mPASS[0m in 0.80s]
+[0m00:55:00  34 of 44 PASS not_null_fct_rides_started_at .................................... [[32mPASS[0m in 0.80s]
+[0m00:55:00  35 of 44 PASS not_null_fct_rides_started_dow ................................... [[32mPASS[0m in 0.80s]
+[0m00:55:00  37 of 44 START test unique_fct_rides_ride_id ................................... [RUN]
+[0m00:55:02  37 of 44 PASS unique_fct_rides_ride_id ......................................... [[32mPASS[0m in 1.57s]
+[0m00:55:02  38 of 44 START sql table model analytics_marts.agg_rides_daily ................. [RUN]
+[0m00:55:02  38 of 44 OK created sql table model analytics_marts.agg_rides_daily ............ [[32mSELECT 369[0m in 0.36s]
+[0m00:55:02  39 of 44 START test dbt_utils_unique_combination_of_columns_agg_rides_daily_started_date__system__member_casual__rideable_type  [RUN]
+[0m00:55:02  40 of 44 START test not_null_agg_rides_daily_started_date ...................... [RUN]
+[0m00:55:02  41 of 44 START test not_null_agg_rides_daily_total_rides ....................... [RUN]
+[0m00:55:02  40 of 44 PASS not_null_agg_rides_daily_started_date ............................ [[32mPASS[0m in 0.03s]
+[0m00:55:02  41 of 44 PASS not_null_agg_rides_daily_total_rides ............................. [[32mPASS[0m in 0.03s]
+[0m00:55:02  39 of 44 PASS dbt_utils_unique_combination_of_columns_agg_rides_daily_started_date__system__member_casual__rideable_type  [[32mPASS[0m in 0.03s]
+[0m00:55:17  26 of 44 OK created sql table model analytics_marts.dim_stations ............... [[32mSELECT 3162[0m in 20.74s]
+[0m00:55:17  42 of 44 START test dbt_utils_unique_combination_of_columns_dim_stations_system__station_id  [RUN]
+[0m00:55:17  43 of 44 START test not_null_dim_stations_station_id ........................... [RUN]
+[0m00:55:17  44 of 44 START test not_null_dim_stations_system ............................... [RUN]
+[0m00:55:17  43 of 44 PASS not_null_dim_stations_station_id ................................. [[32mPASS[0m in 0.04s]
+[0m00:55:17  44 of 44 PASS not_null_dim_stations_system ..................................... [[32mPASS[0m in 0.04s]
+[0m00:55:17  42 of 44 PASS dbt_utils_unique_combination_of_columns_dim_stations_system__station_id  [[32mPASS[0m in 0.04s]
+[0m00:55:17  
+[0m00:55:17  Finished running 1 incremental model, 2 table models, 38 data tests, 3 view models in 0 hours 0 minutes and 24.95 seconds (24.95s).
+[0m00:55:17  
+[0m00:55:17  [33mCompleted with 1 warning:[0m
+[0m00:55:17  
+[0m00:55:17  [33mWarning in test no_implausibly_long_rides (tests/no_implausibly_long_rides.sql)[0m
+[0m00:55:17  Got 1131 results, configured to warn if != 0
+[0m00:55:17  
+[0m00:55:17    compiled code at target/compiled/bikeshare/tests/no_implausibly_long_rides.sql
+[0m00:55:17  
+[0m00:55:17  Done. PASS=43 WARN=1 ERROR=0 SKIP=0 NO-OP=0 TOTAL=44
+dbt build exit code: 0
+
+--- summary ---
+load:  OK
+dbt:   OK
+
+refresh_pipeline.sh finished: Sun May  3 20:55:17 EDT 2026, overall=0

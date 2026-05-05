@@ -1,0 +1,7 @@
+# dbt packages — third-party Jinja+SQL libraries installed via `dbt deps`.
+# They unpack into dbt_packages/ (gitignored) and their macros become callable
+# from your project as if they were local.
+
+packages:
+  - package: dbt-labs/dbt_utils
+    version: [">=1.3.0", "<2.0.0"]

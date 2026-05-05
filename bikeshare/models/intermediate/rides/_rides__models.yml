@@ -1,0 +1,19 @@
+version: 2
+
+models:
+  - name: int_rides__unioned
+    description: |
+      All bikeshare rides across all systems, in the conformed staging shape.
+      Marts that need ride data should reference THIS model, not any specific
+      system's staging model — that way adding/removing a system is a
+      one-file change.
+    columns:
+      - name: ride_id
+        description: ride_id is unique WITHIN a system but NOT globally — two
+          systems may coincidentally produce the same id. Combine with `system`
+          for a globally unique key.
+      - name: system
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['capitalbikeshare', 'citibike']

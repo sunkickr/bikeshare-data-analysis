@@ -1,0 +1,78 @@
+version: 2
+
+models:
+  - name: fct_rides
+    description: |
+      One row per ride, with derived columns the dashboard needs (duration,
+      hour, day-of-week, night-owl flag, etc.). Filtered to physically
+      possible rides only (ended_at >= started_at).
+    columns:
+      - name: ride_id
+        description: Unique identifier of the ride.
+        tests:
+          - unique
+          - not_null
+      - name: started_at
+        tests:
+          - not_null
+      - name: duration_seconds
+        description: Ride duration in seconds. Always >= 0 by construction.
+        tests:
+          - not_null
+      - name: started_dow
+        description: ISO day-of-week, 1=Monday through 7=Sunday.
+        tests:
+          - not_null
+          - accepted_values:
+              values: [1, 2, 3, 4, 5, 6, 7]
+              quote: false                  # numeric, not string
+      - name: member_casual
+        tests:
+          - accepted_values:
+              values: ['member', 'casual']
+      - name: system
+        description: Bikeshare system this ride came from.
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['capitalbikeshare', 'citibike']
+
+  - name: dim_stations
+    description: |
+      One row per unique station observed in either the start or end position
+      of a ride. Most-recent observation wins on name/coordinate updates.
+    # `tests:` directly under the model (not under a column) runs against the
+    # whole model — useful for composite-key uniqueness, since dbt's built-in
+    # `unique` test only works on a single column.
+    tests:
+      - dbt_utils.unique_combination_of_columns:           # (we'll install dbt_utils in a moment)
+          combination_of_columns:
+            - system
+            - station_id
+    columns:
+      - name: station_id
+        tests:
+          - not_null
+      - name: system
+        tests:
+          - not_null
+
+  - name: agg_rides_daily
+    description: |
+      Daily ride counts and duration metrics, sliced by system, member type,
+      and bike type. Backs the daily-distribution charts on the dashboard.
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - started_date
+            - system
+            - member_casual
+            - rideable_type
+    columns:
+      - name: started_date
+        tests:
+          - not_null
+      - name: total_rides
+        description: Number of rides started on this date in this segment.
+        tests:
+          - not_null
