@@ -1,0 +1,42 @@
+# ── dbt ──────────────────────────────────────────
+bikeshare/target/
+bikeshare/dbt_packages/
+bikeshare/logs/
+
+# ── Pipeline logs ─────────────────────────────────
+logs/
+
+# ── Raw data (large CSVs, loaded separately) ──────
+data/
+
+# ── Python ────────────────────────────────────────
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# ── dbt credentials (NEVER commit) ───────────────
+# profiles.yml lives in ~/.dbt/ outside this repo.
+# If you ever copy it here by mistake, this line blocks it.
+profiles.yml
+
+# ── Environment / secrets ─────────────────────────
+.env
+.env.*
+
+# ── macOS ─────────────────────────────────────────
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# ── Editors ───────────────────────────────────────
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
