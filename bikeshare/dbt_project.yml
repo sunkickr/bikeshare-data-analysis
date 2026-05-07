@@ -11,11 +11,11 @@ profile: 'bikeshare'              # which profile in ~/.dbt/profiles.yml to use
 
 # Where dbt looks for each type of file. Defaults are fine; listing them here
 # so the project's anatomy is explicit at a glance.
-model-paths:    ["models"]        # SELECT statements that become tables/views
+model-paths: ["models"]           # SELECT statements that become tables/views
 analysis-paths: ["analyses"]      # one-off SQL you run via `dbt compile`, never materialized
-test-paths:     ["tests"]         # custom singular tests (one .sql = one assertion)
-seed-paths:     ["seeds"]         # CSVs loaded via `dbt seed` — for SMALL static data
-macro-paths:    ["macros"]        # reusable Jinja macros
+test-paths: ["tests"]             # custom singular tests (one .sql = one assertion)
+seed-paths: ["seeds"]             # CSVs loaded via `dbt seed` — for SMALL static data
+macro-paths: ["macros"]           # reusable Jinja macros
 snapshot-paths: ["snapshots"]     # slowly-changing-dimension snapshots
 
 # Folders dbt deletes when you run `dbt clean`. target/ holds compiled SQL
@@ -55,3 +55,5 @@ models:
     marts:
       +materialized: table
       +schema: marts
+flags:
+  require_generic_test_arguments_property: true

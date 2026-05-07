@@ -24,18 +24,21 @@ models:
         tests:
           - not_null
           - accepted_values:
-              values: [1, 2, 3, 4, 5, 6, 7]
-              quote: false                  # numeric, not string
+              arguments:
+                values: [1, 2, 3, 4, 5, 6, 7]
+                quote: false
       - name: member_casual
         tests:
           - accepted_values:
-              values: ['member', 'casual']
+              arguments:
+                values: ['member', 'casual']
       - name: system
         description: Bikeshare system this ride came from.
         tests:
           - not_null
           - accepted_values:
-              values: ['capitalbikeshare', 'citibike']
+              arguments:
+                values: ['capitalbikeshare', 'citibike']
 
   - name: dim_stations
     description: |
@@ -46,9 +49,10 @@ models:
     # `unique` test only works on a single column.
     tests:
       - dbt_utils.unique_combination_of_columns:           # (we'll install dbt_utils in a moment)
-          combination_of_columns:
-            - system
-            - station_id
+          arguments:
+            combination_of_columns:
+              - system
+              - station_id
     columns:
       - name: station_id
         tests:
@@ -63,11 +67,12 @@ models:
       and bike type. Backs the daily-distribution charts on the dashboard.
     tests:
       - dbt_utils.unique_combination_of_columns:
-          combination_of_columns:
-            - started_date
-            - system
-            - member_casual
-            - rideable_type
+          arguments:
+            combination_of_columns:
+              - started_date
+              - system
+              - member_casual
+              - rideable_type
     columns:
       - name: started_date
         tests:

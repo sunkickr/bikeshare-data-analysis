@@ -9,11 +9,10 @@ models:
       one-file change.
     columns:
       - name: ride_id
-        description: ride_id is unique WITHIN a system but NOT globally — two
-          systems may coincidentally produce the same id. Combine with `system`
-          for a globally unique key.
+        description: ride_id is unique WITHIN a system but NOT globally — two systems may coincidentally produce the same id. Combine with `system` for a globally unique key.
       - name: system
         tests:
           - not_null
           - accepted_values:
-              values: ['capitalbikeshare', 'citibike']
+              arguments:
+                values: ['capitalbikeshare', 'citibike']

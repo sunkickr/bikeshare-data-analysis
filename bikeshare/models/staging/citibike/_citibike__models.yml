@@ -21,14 +21,17 @@ models:
         tests:
           - not_null
           - accepted_values:
-              values: ['classic_bike', 'electric_bike']
+              arguments:
+                values: ['classic_bike', 'electric_bike']
       - name: member_casual
         tests:
           - not_null
           - accepted_values:
-              values: ['member', 'casual']
+              arguments:
+                values: ['member', 'casual']
       - name: system
         tests:
           - not_null
           - accepted_values:
-              values: ['citibike']
+              arguments:
+                values: ['citibike']

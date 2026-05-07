@@ -20,11 +20,6 @@ sources:
     # _ingested_at (which the load script sets) rather than started_at,
     # because we want to know "did anyone load anything?" not "is the data
     # itself recent?" — those are different alerts.
-    loaded_at_field: _ingested_at
-    freshness:
-      warn_after: {count: 35, period: day}    # nag if no load in ~5 weeks (monthly cadence + grace)
-      error_after: {count: 60, period: day}   # alarm if no load in 2 months
-
     tables:
       - name: trips
         identifier: capitalbikeshare_trips
@@ -44,3 +39,8 @@ sources:
             description: Ride end timestamp. May fall in the next month.
           - name: member_casual
             description: "Either 'member' (subscriber) or 'casual' (single ride / day pass)."
+    config:
+      loaded_at_field: _ingested_at
+      freshness:
+        warn_after: {count: 35, period: day}  # nag if no load in ~5 weeks (monthly cadence + grace)
+        error_after: {count: 60, period: day} # alarm if no load in 2 months

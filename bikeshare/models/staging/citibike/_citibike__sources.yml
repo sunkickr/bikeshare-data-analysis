@@ -9,10 +9,6 @@ sources:
     database: bikeshare
     schema: raw
 
-    loaded_at_field: _ingested_at
-    freshness:
-      warn_after: {count: 35, period: day}
-      error_after: {count: 60, period: day}
 
     tables:
       - name: trips
@@ -29,3 +25,8 @@ sources:
             description: Ride end timestamp.
           - name: member_casual
             description: "Either 'member' (subscriber) or 'casual' (single ride / day pass)."
+    config:
+      loaded_at_field: _ingested_at
+      freshness:
+        warn_after: {count: 35, period: day}
+        error_after: {count: 60, period: day}

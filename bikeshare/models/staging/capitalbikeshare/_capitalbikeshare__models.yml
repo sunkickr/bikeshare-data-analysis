@@ -31,16 +31,19 @@ models:
         tests:
           - not_null
           - accepted_values:
-              values: ['classic_bike', 'electric_bike']
+              arguments:
+                values: ['classic_bike', 'electric_bike']
       - name: member_casual
         description: Rider type.
         tests:
           - not_null
           - accepted_values:
-              values: ['member', 'casual']
+              arguments:
+                values: ['member', 'casual']
       - name: system
         description: Bikeshare system — always 'capitalbikeshare' in this staging model.
         tests:
           - not_null
           - accepted_values:
-              values: ['capitalbikeshare']
+              arguments:
+                values: ['capitalbikeshare']
