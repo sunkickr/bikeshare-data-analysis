@@ -7,7 +7,7 @@ bikeshare/logs/
 logs/
 
 # ── Raw data (large CSVs, loaded separately) ──────
-data/
+data/*
 
 # ── Python ────────────────────────────────────────
 .venv/
