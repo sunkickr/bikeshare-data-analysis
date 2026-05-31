@@ -31,6 +31,15 @@ SYSTEM_LABEL = {
     "citibike": "NYC",
 }
 
+# Stable segment colors so member/casual and classic/electric look the same
+# across the Overview, Ride Activity, and (future) City Comparison pages.
+SEGMENT_COLORS = {
+    "member": "#86EFAC",         # mint
+    "casual": "#FDE68A",         # butter
+    "classic_bike": "#C4B5FD",   # lavender
+    "electric_bike": "#F9A8D4",  # rose
+}
+
 
 def apply_plotly_defaults() -> None:
     """Register a dark Plotly template tuned to match the Streamlit dark theme."""
