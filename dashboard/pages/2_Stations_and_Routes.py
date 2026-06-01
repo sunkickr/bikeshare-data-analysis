@@ -109,9 +109,10 @@ def _section_top_stations(title: str, query_fn, filters: Filters) -> None:
 
 
 def _section_top_routes(filters: Filters) -> None:
-    """Top 5 routes per system, labeled as 'Start Station → End Station'."""
+    """Top 5 routes per system, labeled as 'Start Station → End Station'.
+    Round trips (start = end) are excluded — see queries.top_routes.
+    """
     st.subheader("Top 5 routes")
-    st.caption("Round trips (same station, start → end) are included.")
     df = queries.top_routes(filters.systems, filters.month_start, filters.month_end, limit=5)
     if df.empty:
         empty_state()

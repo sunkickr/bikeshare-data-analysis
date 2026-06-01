@@ -108,8 +108,8 @@ For architecture / module structure, see [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ### F16. Top 5 routes per system
 - Horizontal bar chart with `start_station_name → end_station_name` labels.
-- Round trips included intentionally — they represent leisure/tourism hubs.
-- **What could break:** filtering out `start_station_id = end_station_id` would silently change the meaning of "top routes" without a UI signal.
+- **Round trips excluded** (`start_station_name <> end_station_name` in the query). The map and the bar chart now agree — both show only directional routes. This makes the top-N a list of actual journeys, not a list of which stations are the busiest hubs.
+- **What could break:** re-introducing round trips would surface hub stations as "routes" and inflate the top-N with start=end pairs.
 
 ## Time Patterns page (`pages/3_Time_Patterns.py`)
 
