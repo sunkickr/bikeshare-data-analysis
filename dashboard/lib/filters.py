@@ -59,10 +59,14 @@ def get_available_months() -> list[date]:
 def render_header_filters() -> Filters:
     """Render the header filter row above page content. Returns the chosen Filters.
 
-    Single horizontal row. Off by default: one Month dropdown. Toggle "Multi-month"
-    on and the single dropdown is replaced by two (Start / End) without changing
-    the row height — labels on every widget keep the vertical alignment clean.
-    State persists in st.session_state across page navigation.
+    Persistence model:
+      - Single source of truth is `p_*` keys in st.session_state, which we own
+        explicitly (set via direct writes). These survive page navigation in
+        Streamlit's multipage app — only widget-bound state gets pruned.
+      - Widgets render *without* a `key=` argument. Each render, we read the
+        current value from `p_*` and pass it as `index=`/`value=` so the widget
+        displays the right thing. We capture the widget's return and write back
+        to `p_*` immediately. The widget never owns state we depend on.
     """
     months = get_available_months()
     if not months:
@@ -72,10 +76,14 @@ def render_header_filters() -> Filters:
     month_options = list(reversed(months))   # newest first in the dropdown
     default_month = months[-1]
 
-    # Read the toggle's previous value before laying out columns — the column
-    # count depends on it. The toggle widget itself renders inside the last
-    # column and only takes effect on the next rerun.
-    is_range = st.session_state.get("flt_is_range", False)
+    # Persistent state — survives page navigation because we set it explicitly.
+    _init_persistent("p_system", "Both", SYSTEM_CHOICES)
+    _init_persistent("p_month", default_month, month_options)
+    _init_persistent("p_range_start", default_month, month_options)
+    _init_persistent("p_range_end", default_month, month_options)
+    _init_persistent("p_is_range", False, None)
+
+    is_range = st.session_state["p_is_range"]
 
     if is_range:
         cols = st.columns([1.5, 2, 2, 1.5])
@@ -85,60 +93,75 @@ def render_header_filters() -> Filters:
         system_col, single_col, toggle_col = cols
 
     with system_col:
-        system_choice = st.selectbox(
-            "System",
-            SYSTEM_CHOICES,
-            index=SYSTEM_CHOICES.index(st.session_state.get("flt_system", "Both")),
-            key="flt_system",
-        )
+        sys_idx = SYSTEM_CHOICES.index(st.session_state["p_system"])
+        system_choice = st.selectbox("System", SYSTEM_CHOICES, index=sys_idx)
+        st.session_state["p_system"] = system_choice
 
     if is_range:
         with start_col:
-            prior_start = st.session_state.get("flt_range_start", default_month)
+            idx = month_options.index(st.session_state["p_range_start"])
             m_start = st.selectbox(
-                "Start month",
-                month_options,
-                index=month_options.index(prior_start) if prior_start in month_options else 0,
-                format_func=_format_month,
-                key="flt_range_start",
+                "Start month", month_options,
+                index=idx, format_func=_format_month,
             )
+            st.session_state["p_range_start"] = m_start
         with end_col:
-            prior_end = st.session_state.get("flt_range_end", default_month)
+            idx = month_options.index(st.session_state["p_range_end"])
             m_end = st.selectbox(
-                "End month",
-                month_options,
-                index=month_options.index(prior_end) if prior_end in month_options else 0,
-                format_func=_format_month,
-                key="flt_range_end",
+                "End month", month_options,
+                index=idx, format_func=_format_month,
             )
+            st.session_state["p_range_end"] = m_end
         if m_start > m_end:
             m_start, m_end = m_end, m_start
     else:
         with single_col:
-            prior_month = st.session_state.get("flt_month", default_month)
+            idx = month_options.index(st.session_state["p_month"])
             chosen = st.selectbox(
-                "Month",
-                month_options,
-                index=month_options.index(prior_month) if prior_month in month_options else 0,
-                format_func=_format_month,
-                key="flt_month",
+                "Month", month_options,
+                index=idx, format_func=_format_month,
             )
+            st.session_state["p_month"] = chosen
             m_start = m_end = chosen
 
     with toggle_col:
-        st.toggle(
+        new_is_range = st.toggle(
             "Multi-month",
             value=is_range,
-            key="flt_is_range",
             help="Switch to two dropdowns to aggregate across a month range.",
         )
+        st.session_state["p_is_range"] = new_is_range
 
     if system_choice == "Both":
         systems = ("capitalbikeshare", "citibike")
     else:
         systems = (SYSTEM_TO_DB[system_choice],)
 
+    # DEBUG — remove once filter persistence is verified
+    with st.expander("🔧 Debug: session state (for filter persistence diagnosis)"):
+        st.json({
+            "p_system": str(st.session_state.get("p_system")),
+            "p_month": str(st.session_state.get("p_month")),
+            "p_range_start": str(st.session_state.get("p_range_start")),
+            "p_range_end": str(st.session_state.get("p_range_end")),
+            "p_is_range": st.session_state.get("p_is_range"),
+            "resolved_systems": list(systems),
+            "resolved_m_start": str(m_start),
+            "resolved_m_end": str(m_end),
+        })
+
     return Filters(systems=systems, month_start=m_start, month_end=m_end)
+
+
+def _init_persistent(key: str, default, valid_options) -> None:
+    """Init a persistent (user-owned) session state key. Resets if the saved
+    value is stale (no longer in valid_options) — safe even when filter options
+    change between dbt runs.
+    """
+    if key not in st.session_state:
+        st.session_state[key] = default
+    elif valid_options is not None and st.session_state[key] not in valid_options:
+        st.session_state[key] = default
 
 
 def _format_month(d: date) -> str:
