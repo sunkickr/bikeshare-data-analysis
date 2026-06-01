@@ -80,6 +80,23 @@ For architecture / module structure, see [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## Stations & Routes page (`pages/2_Stations_and_Routes.py`)
 
+### F23. Top stations & routes geographic map
+- One Plotly mapbox map per system, rendered at the **top** of the page above the existing bar charts. Layout collapses to a single full-width map when the System filter is "DC" or "NYC" only.
+- Four z-ordered layers per map:
+  1. **Dim background**: every station in `dim_stations` for that system, rendered as small slate dots (~840 for DC, ~2,300 for NYC). Provides geographic context for the highlighted markers.
+  2. **Route lines**: top 5 routes drawn between station coordinates, line width proportional to ride count (clamped 1.5 → 6).
+  3. **End station markers**: top 10 end stations, light orange (`MAP_END_COLOR`), size proportional to ride count (clamped 10 → 28).
+  4. **Start station markers**: top 10 start stations, mint (`MAP_START_COLOR`), same size scaling — on top so they read as the primary highlight.
+- Basemap: `carto-darkmatter` (no Mapbox API token required).
+- Initial center + zoom per system: DC at `(38.92, -77.03)`, NYC at `(40.73, -73.99)`, both at zoom 11. Defined in `lib/theme.MAP_CENTER` and `MAP_ZOOM`.
+- Hover tooltips: dim dots show just the station name, highlighted markers show name + start/end ride count, route lines show "Start → End: N rides".
+- **What could break:**
+  - **Removing or renaming any of the four geo queries** (`all_stations_geo`, `top_start_stations_geo`, `top_end_stations_geo`, `top_routes_geo`) — the page would error on import.
+  - **Changing the LEFT JOIN to dim_stations in the geo queries** to an INNER JOIN — would drop top stations that aren't yet registered in `dim_stations`, silently shrinking the visible markers.
+  - **Reordering trace additions in `station_route_map`** — z-order matters: dim background must go first so the highlights sit visually on top of it.
+  - **Per-route trace explosion in the legend**: each route is its own Plotly trace (Scattermapbox can't do per-segment line width otherwise). The legend stays clean only because every route trace shares `legendgroup="routes"` with `showlegend=False`, and a single placeholder trace at the end provides the visible legend entry. Removing the placeholder removes the "Top routes" legend entry; removing the `legendgroup` floods the legend with 5 individual route entries.
+  - **Plotly upgrade past 5.x:** `go.Scattermapbox` is deprecated in favor of `go.Scattermap` in Plotly 6. The chart helper will need to migrate.
+
 ### F14. Top 10 start stations per system
 - Horizontal bar chart per system, side by side. Y-axis = station name, X-axis = ride count.
 - Highest-volume station at top of chart (data sorted ascending so Plotly draws it last).
@@ -147,6 +164,10 @@ For architecture / module structure, see [ARCHITECTURE.md](ARCHITECTURE.md).
 | `top_start_stations` | F14 |
 | `top_end_stations` | F15 |
 | `top_routes` | F16 |
+| `all_stations_geo` | F23 |
+| `top_start_stations_geo` | F23 |
+| `top_end_stations_geo` | F23 |
+| `top_routes_geo` | F23 |
 | `rides_by_hour` | F17 |
 | `rides_by_dow` | F18 |
 | `city_summary` | F20, F21, F22 |

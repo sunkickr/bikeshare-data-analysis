@@ -13,6 +13,7 @@ from lib import queries
 from lib.charts import (
     empty_state,
     horizontal_bar_chart,
+    station_route_map,
     system_columns,
     system_header,
 )
@@ -28,11 +29,55 @@ def main() -> None:
     filters = render_header_filters()
     st.divider()
 
+    _section_map(filters)
+    st.divider()
     _section_top_stations("Top 10 start stations", queries.top_start_stations, filters)
     st.divider()
     _section_top_stations("Top 10 end stations", queries.top_end_stations, filters)
     st.divider()
     _section_top_routes(filters)
+
+
+def _section_map(filters: Filters) -> None:
+    """One Plotly mapbox map per system. Dim background = every station in the
+    network; mint = top 10 start stations; orange = top 10 end stations; lines
+    = top 5 routes. Layout uses `system_columns` so the row collapses to one
+    full-width map when the user filters to a single system.
+    """
+    st.subheader("Top stations and routes")
+    st.caption(
+        "Dim dots = every station in the network · "
+        "Mint = top 10 start stations · "
+        "Orange = top 10 end stations · "
+        "Lines = top 5 routes (width ∝ rides)."
+    )
+
+    all_df = queries.all_stations_geo(filters.systems)
+    start_df = queries.top_start_stations_geo(filters.systems, filters.month_start, filters.month_end, limit=10)
+    end_df = queries.top_end_stations_geo(filters.systems, filters.month_start, filters.month_end, limit=10)
+    routes_df = queries.top_routes_geo(filters.systems, filters.month_start, filters.month_end, limit=5)
+
+    if all_df.empty and start_df.empty and end_df.empty and routes_df.empty:
+        empty_state()
+        return
+
+    cols, syss = system_columns(filters.systems)
+    for col, system in zip(cols, syss):
+        with col:
+            system_header(system)
+            sys_all = all_df[all_df["system"] == system]
+            sys_start = start_df[start_df["system"] == system]
+            sys_end = end_df[end_df["system"] == system]
+            sys_routes = routes_df[routes_df["system"] == system]
+            if sys_all.empty and sys_start.empty and sys_end.empty and sys_routes.empty:
+                empty_state(f"No map data for {SYSTEM_LABEL[system]}.")
+                continue
+            fig = station_route_map(
+                sys_all, sys_start, sys_end, sys_routes,
+                system=system,
+                height=460,
+            )
+            st.plotly_chart(fig, use_container_width=True)
 
 
 def _section_top_stations(title: str, query_fn, filters: Filters) -> None:

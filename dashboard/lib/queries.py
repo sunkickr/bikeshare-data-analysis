@@ -342,6 +342,170 @@ def top_routes(
     )
 
 
+# ── Stations & Routes map (geo-enriched) ───────────────────────────────────
+
+
+@st.cache_data(ttl=_CACHE_TTL, show_spinner=False)
+def all_stations_geo(systems: tuple[str, ...]) -> pd.DataFrame:
+    """Every known station per system with its canonical lat/lng from dim_stations.
+
+    Not month-filtered — the station *network* is a slowly-changing dimension and
+    the map's dim background layer should be stable as users scrub through months.
+    Cache key is just `systems`, so every filter combination on the page reuses
+    this DataFrame for the background dots.
+    """
+    sql = """
+        SELECT system, station_id, station_name, lat, lng
+        FROM analytics_marts.dim_stations
+        WHERE system = ANY(:systems)
+          AND lat IS NOT NULL
+          AND lng IS NOT NULL
+        ORDER BY system, station_id
+    """
+    return run_query(sql, {"systems": list(systems)})
+
+
+@st.cache_data(ttl=_CACHE_TTL, show_spinner="Ranking stations…")
+def top_start_stations_geo(
+    systems: tuple[str, ...], month_start: date, month_end: date, limit: int = 10
+) -> pd.DataFrame:
+    """Top N start stations per system, with lat/lng joined from dim_stations.
+
+    Groups by start_station_id (not name) so the join to dim_stations is on a
+    stable key. The display name comes from MAX(start_station_name) — safe
+    because clean data has a 1:1 station_id → station_name relationship.
+    """
+    sql = """
+        WITH counts AS (
+            SELECT
+                system,
+                start_station_id AS station_id,
+                MAX(start_station_name) AS station_name,
+                COUNT(*) AS rides
+            FROM analytics_marts.fct_rides
+            WHERE system = ANY(:systems)
+              AND started_month BETWEEN :month_start AND :month_end
+              AND start_station_id IS NOT NULL
+            GROUP BY system, start_station_id
+        ),
+        ranked AS (
+            SELECT
+                system, station_id, station_name, rides,
+                ROW_NUMBER() OVER (PARTITION BY system ORDER BY rides DESC, station_id) AS rank
+            FROM counts
+        )
+        SELECT
+            r.system, r.station_id, r.station_name, r.rides, r.rank,
+            s.lat, s.lng
+        FROM ranked r
+        LEFT JOIN analytics_marts.dim_stations s
+            ON s.system = r.system AND s.station_id = r.station_id
+        WHERE r.rank <= :limit
+        ORDER BY r.system, r.rank
+    """
+    return run_query(
+        sql,
+        {"systems": list(systems), "month_start": month_start, "month_end": month_end, "limit": limit},
+    )
+
+
+@st.cache_data(ttl=_CACHE_TTL, show_spinner=False)
+def top_end_stations_geo(
+    systems: tuple[str, ...], month_start: date, month_end: date, limit: int = 10
+) -> pd.DataFrame:
+    """Top N end stations per system with lat/lng. Symmetric to top_start_stations_geo."""
+    sql = """
+        WITH counts AS (
+            SELECT
+                system,
+                end_station_id AS station_id,
+                MAX(end_station_name) AS station_name,
+                COUNT(*) AS rides
+            FROM analytics_marts.fct_rides
+            WHERE system = ANY(:systems)
+              AND started_month BETWEEN :month_start AND :month_end
+              AND end_station_id IS NOT NULL
+            GROUP BY system, end_station_id
+        ),
+        ranked AS (
+            SELECT
+                system, station_id, station_name, rides,
+                ROW_NUMBER() OVER (PARTITION BY system ORDER BY rides DESC, station_id) AS rank
+            FROM counts
+        )
+        SELECT
+            r.system, r.station_id, r.station_name, r.rides, r.rank,
+            s.lat, s.lng
+        FROM ranked r
+        LEFT JOIN analytics_marts.dim_stations s
+            ON s.system = r.system AND s.station_id = r.station_id
+        WHERE r.rank <= :limit
+        ORDER BY r.system, r.rank
+    """
+    return run_query(
+        sql,
+        {"systems": list(systems), "month_start": month_start, "month_end": month_end, "limit": limit},
+    )
+
+
+@st.cache_data(ttl=_CACHE_TTL, show_spinner=False)
+def top_routes_geo(
+    systems: tuple[str, ...], month_start: date, month_end: date, limit: int = 5
+) -> pd.DataFrame:
+    """Top N routes per system with start AND end lat/lng joined from dim_stations.
+
+    **Excludes round trips** (start_station_id = end_station_id) — unlike the
+    bar-chart `top_routes` query. A round trip has zero line length on a map,
+    so it would render invisibly; this version only returns routes that have a
+    geographic direction. The two dim_stations joins use aliases (ss, es).
+    """
+    sql = """
+        WITH counts AS (
+            SELECT
+                system,
+                start_station_id,
+                end_station_id,
+                MAX(start_station_name) AS start_station_name,
+                MAX(end_station_name)   AS end_station_name,
+                COUNT(*) AS rides
+            FROM analytics_marts.fct_rides
+            WHERE system = ANY(:systems)
+              AND started_month BETWEEN :month_start AND :month_end
+              AND start_station_id IS NOT NULL
+              AND end_station_id   IS NOT NULL
+              AND start_station_id <> end_station_id
+            GROUP BY system, start_station_id, end_station_id
+        ),
+        ranked AS (
+            SELECT
+                system, start_station_id, end_station_id,
+                start_station_name, end_station_name, rides,
+                ROW_NUMBER() OVER (
+                    PARTITION BY system
+                    ORDER BY rides DESC, start_station_id, end_station_id
+                ) AS rank
+            FROM counts
+        )
+        SELECT
+            r.system, r.start_station_id, r.end_station_id,
+            r.start_station_name, r.end_station_name, r.rides, r.rank,
+            r.start_station_name || ' → ' || r.end_station_name AS route_label,
+            ss.lat AS start_lat, ss.lng AS start_lng,
+            es.lat AS end_lat,   es.lng AS end_lng
+        FROM ranked r
+        LEFT JOIN analytics_marts.dim_stations ss
+            ON ss.system = r.system AND ss.station_id = r.start_station_id
+        LEFT JOIN analytics_marts.dim_stations es
+            ON es.system = r.system AND es.station_id = r.end_station_id
+        WHERE r.rank <= :limit
+        ORDER BY r.system, r.rank
+    """
+    return run_query(
+        sql,
+        {"systems": list(systems), "month_start": month_start, "month_end": month_end, "limit": limit},
+    )
+
+
 # ── Phase 4: Time Patterns + City Comparison ────────────────────────────────
 
 

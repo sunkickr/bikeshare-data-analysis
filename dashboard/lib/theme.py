@@ -40,6 +40,21 @@ SEGMENT_COLORS = {
     "electric_bike": "#F9A8D4",  # rose
 }
 
+# Stations & Routes map palette. Distinct from system identity colors so the
+# top-N highlights don't compete with the DC/NYC column headers.
+MAP_BASE_COLOR = "#4B5563"    # slate — dim background "all stations" layer
+MAP_START_COLOR = "#86EFAC"   # mint — top start stations
+MAP_END_COLOR = "#FDBA74"     # light orange — top end stations
+MAP_ROUTE_COLOR = "#E5E7EB"   # light neutral — route lines (high contrast on dark basemap)
+
+# Initial map center + zoom per system. Centroid of each system's bounding box,
+# chosen so the top-10 markers comfortably fit at zoom level 11.
+MAP_CENTER = {
+    "capitalbikeshare": (38.92, -77.03),  # roughly U Street, Washington DC
+    "citibike":         (40.73, -73.99),  # roughly NoHo, Manhattan
+}
+MAP_ZOOM = 11
+
 
 def apply_plotly_defaults() -> None:
     """Register a dark Plotly template tuned to match the Streamlit dark theme."""

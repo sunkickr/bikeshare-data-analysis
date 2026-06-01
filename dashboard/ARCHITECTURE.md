@@ -66,7 +66,8 @@ These are the rules that other dashboard code relies on. Breaking them silently 
 
 ### Data source
 - **All queries hit `analytics_marts.*` only.** Never read from `raw.*` or `analytics.*` directly. The marts layer is the contract between dbt and the dashboard.
-- **`fct_rides` is hit by exactly four queries** (`shortest_ride_between_stations`, `top_start_stations`, `top_end_stations`, `top_routes`, `rides_by_hour`, `rides_by_dow`, and the `active_stations` CTE inside `city_summary`). Everything else uses `agg_rides_daily` or `dim_stations` for speed.
+- **`fct_rides` is hit by a small set of queries:** `shortest_ride_between_stations`, `top_start_stations`, `top_end_stations`, `top_routes`, `top_start_stations_geo`, `top_end_stations_geo`, `top_routes_geo`, `rides_by_hour`, `rides_by_dow`, and the `active_stations` CTE inside `city_summary`. Everything else uses `agg_rides_daily` or `dim_stations` for speed.
+- **`dim_stations` is the source of truth for station coordinates.** `fct_rides.start_lat` / `start_lng` carry per-ride coordinates that are noisy for DC (GPS jitter — ~66 unique lat values per `station_id`). Any query that needs a stable lat/lng must LEFT JOIN `dim_stations` on `(system, station_id)` rather than aggregating `fct_rides` coordinates. The four `*_geo` queries follow this pattern; `all_stations_geo` reads `dim_stations` directly.
 - **`started_date` / `started_month` is the canonical time bucket.** Never use `ended_at` for filtering — rides spilling into the next month belong to the month they *started*.
 
 ### Module layering
@@ -93,6 +94,7 @@ lib.filters ──→ lib.db (via get_available_months)
 ### Visual identity
 - **DC = periwinkle `#A5B4FC`, NYC = salmon `#FCA5A5`.** Used everywhere a city is named. Defined in `lib/theme.py` as `DC_COLOR` / `NYC_COLOR` and bound to system slugs via `SYSTEM_COLOR`.
 - **Pastel palette** for breakdowns (member/casual, classic/electric): mint, butter, lavender, rose. Specific assignments in `lib/theme.SEGMENT_COLORS`.
+- **Map palette** (Stations & Routes only): `MAP_BASE_COLOR` (slate dim background), `MAP_START_COLOR` (mint, top starts), `MAP_END_COLOR` (light orange, top ends), `MAP_ROUTE_COLOR` (muted gray, routes). Plus `MAP_CENTER` (per-system initial lat/lng) and `MAP_ZOOM`. Defined in `lib/theme.py`.
 - **Dark base:** background `#0E1117`, surface `#1A1D24`, text `#E6E6E6`.
 - **Plotly template** `bikeshare_dark` registered globally by `lib/theme.apply_plotly_defaults()`. Every page calls this once at the top.
 
@@ -127,6 +129,11 @@ Queries treat `month_start == month_end` as a single-month filter and `month_sta
 - Profile: `bikeshare`, target: `dev`. Same source of truth dbt uses.
 - Connection string built dynamically in `lib/db._read_profile()`.
 - `pool_pre_ping=True` on the engine — handles Postgres restarts mid-session.
+
+## Known limitations
+
+- **Streamlit 1.41.1 mapbox zoom bug** ([streamlit#10346](https://github.com/streamlit/streamlit/issues/10346)) — pan and click on the Stations & Routes map work, but programmatic / scroll-wheel zoom can be janky. Mitigated by setting a sensible initial zoom (`MAP_ZOOM = 11`) per system. Upgrading Streamlit past 1.42+ resolves it but requires re-testing the rest of the app.
+- **Plotly `Scattermapbox` is deprecated in Plotly 6.x** in favor of `go.Scattermap` + MapLibre. We're pinned to Plotly 5.24.1 where `Scattermapbox` still works. A future Plotly upgrade will require migrating `station_route_map` in `lib/charts.py`.
 
 ## Python environment
 

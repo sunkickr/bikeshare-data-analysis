@@ -11,6 +11,12 @@ import streamlit as st
 
 from lib.theme import (
     DC_COLOR,
+    MAP_BASE_COLOR,
+    MAP_CENTER,
+    MAP_END_COLOR,
+    MAP_ROUTE_COLOR,
+    MAP_START_COLOR,
+    MAP_ZOOM,
     MUTED,
     NYC_COLOR,
     PASTEL_PALETTE,
@@ -205,6 +211,159 @@ def horizontal_bar_chart(
     fig.update_yaxes(automargin=True, tickfont=dict(size=11))
     fig.update_xaxes(showticklabels=False)
     return fig
+
+
+def station_route_map(
+    all_stations_df: pd.DataFrame,
+    start_df: pd.DataFrame,
+    end_df: pd.DataFrame,
+    routes_df: pd.DataFrame,
+    *,
+    system: str,
+    height: int = 460,
+) -> go.Figure:
+    """Plotly mapbox map for one system. Four z-ordered layers:
+
+      1. (bottom) Dim slate dots for every station in the network — context.
+      2. Muted gray lines for top routes, width proportional to ride count.
+      3. Light-orange markers for top end stations.
+      4. (top) Mint markers for top start stations.
+
+    Coordinate-missing rows are dropped per-trace so an incomplete LEFT JOIN
+    against dim_stations doesn't break the figure.
+    """
+    fig = go.Figure()
+
+    # 1. All stations background layer — small dim dots, hidden from legend.
+    base = all_stations_df.dropna(subset=["lat", "lng"])
+    if not base.empty:
+        fig.add_trace(
+            go.Scattermapbox(
+                lat=base["lat"],
+                lon=base["lng"],
+                mode="markers",
+                marker=go.scattermapbox.Marker(
+                    size=5,
+                    color=MAP_BASE_COLOR,
+                    opacity=0.45,
+                ),
+                text=base["station_name"],
+                hovertemplate="<b>%{text}</b><extra></extra>",
+                name="All stations",
+                showlegend=False,
+            )
+        )
+
+    # 2. Route lines — one Scattermapbox trace per route so width can be per-route
+    # (Plotly Scattermapbox supports per-trace line width but not per-segment).
+    routes = routes_df.dropna(subset=["start_lat", "start_lng", "end_lat", "end_lng"])
+    if not routes.empty:
+        widths = _scale(routes["rides"], 3.0, 9.0)
+        for (_, row), width in zip(routes.iterrows(), widths):
+            fig.add_trace(
+                go.Scattermapbox(
+                    lat=[row["start_lat"], row["end_lat"]],
+                    lon=[row["start_lng"], row["end_lng"]],
+                    mode="lines",
+                    line=dict(color=MAP_ROUTE_COLOR, width=float(width)),
+                    opacity=0.85,
+                    hovertemplate=(
+                        f"<b>{row['route_label']}</b><br>"
+                        f"{int(row['rides']):,} rides<extra></extra>"
+                    ),
+                    name="Top routes",
+                    showlegend=False,
+                    legendgroup="routes",
+                )
+            )
+        # Single visible legend entry for the route group.
+        fig.add_trace(
+            go.Scattermapbox(
+                lat=[None], lon=[None], mode="lines",
+                line=dict(color=MAP_ROUTE_COLOR, width=4),
+                name="Top routes", legendgroup="routes", showlegend=True,
+            )
+        )
+
+    # 3. End station markers — drawn LARGER than start markers so they form an
+    # orange "halo" around the mint center when a station is in both top-10 lists
+    # (very common for hub stations).
+    ends = end_df.dropna(subset=["lat", "lng"])
+    if not ends.empty:
+        sizes = _scale(ends["rides"], 16, 36)
+        fig.add_trace(
+            go.Scattermapbox(
+                lat=ends["lat"],
+                lon=ends["lng"],
+                mode="markers",
+                marker=go.scattermapbox.Marker(
+                    size=sizes.tolist(),
+                    color=MAP_END_COLOR,
+                    opacity=0.95,
+                ),
+                text=ends["station_name"],
+                customdata=ends["rides"],
+                hovertemplate="<b>%{text}</b><br>%{customdata:,} ends<extra></extra>",
+                name="Top end stations",
+            )
+        )
+
+    # 4. Start station markers — smaller than end markers so the orange halo
+    # behind shows for "both" stations; drawn on top so mint reads as primary.
+    starts = start_df.dropna(subset=["lat", "lng"])
+    if not starts.empty:
+        sizes = _scale(starts["rides"], 10, 26)
+        fig.add_trace(
+            go.Scattermapbox(
+                lat=starts["lat"],
+                lon=starts["lng"],
+                mode="markers",
+                marker=go.scattermapbox.Marker(
+                    size=sizes.tolist(),
+                    color=MAP_START_COLOR,
+                    opacity=0.95,
+                ),
+                text=starts["station_name"],
+                customdata=starts["rides"],
+                hovertemplate="<b>%{text}</b><br>%{customdata:,} starts<extra></extra>",
+                name="Top start stations",
+            )
+        )
+
+    center_lat, center_lng = MAP_CENTER.get(system, (0.0, 0.0))
+    fig.update_layout(
+        mapbox=dict(
+            style="carto-darkmatter",
+            center=dict(lat=center_lat, lon=center_lng),
+            zoom=MAP_ZOOM,
+        ),
+        height=height,
+        margin=dict(l=0, r=0, t=0, b=0),
+        showlegend=True,
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=0.02,
+            xanchor="center",
+            x=0.5,
+            bgcolor="rgba(14, 17, 23, 0.7)",
+            bordercolor=SURFACE,
+            borderwidth=1,
+        ),
+    )
+    return fig
+
+
+def _scale(series: pd.Series, lo: float, hi: float) -> pd.Series:
+    """Linearly scale a numeric series into the [lo, hi] range. Safe when min == max."""
+    values = series.astype(float)
+    vmin, vmax = values.min(), values.max()
+    if vmin == vmax:
+        # All values equal — return the midpoint so markers/lines render at a
+        # consistent visible size rather than collapsing to zero.
+        mid = (lo + hi) / 2.0
+        return pd.Series([mid] * len(values), index=values.index)
+    return lo + (values - vmin) * (hi - lo) / (vmax - vmin)
 
 
 def simple_bar_chart(
