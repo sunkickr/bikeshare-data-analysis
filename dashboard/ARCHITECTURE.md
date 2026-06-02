@@ -29,12 +29,14 @@ Streamlit-based analytics UI for the bikeshare project. Reads from the dbt-produ
 │                    └──────────────┘   (SQLAlchemy engine)     │ │ │
 └───────────────────────────────────────────────────────────────┼─┼─┘
                                                                 ▼ ▼
-                                ┌───────────────────────────────────┐
-                                │ Postgres (localhost:5432)         │
-                                │   analytics_marts.fct_rides       │
-                                │   analytics_marts.dim_stations    │
-                                │   analytics_marts.agg_rides_daily │
-                                └───────────────────────────────────┘
+                                ┌──────────────────────────────────────────────┐
+                                │ Postgres (localhost:5432)                    │
+                                │   analytics_marts.fct_rides                  │
+                                │   analytics_marts.dim_stations               │
+                                │   analytics_marts.agg_rides_daily            │
+                                │   analytics_marts.agg_rides_by_neighborhood  │
+                                │   analytics_marts.agg_rides_by_cluster       │
+                                └──────────────────────────────────────────────┘
 ```
 
 ## Directory layout
@@ -46,7 +48,9 @@ dashboard/
 │   ├── 1_Ride_Activity.py
 │   ├── 2_Stations_and_Routes.py
 │   ├── 3_Time_Patterns.py
-│   └── 4_City_Comparison.py
+│   ├── 4_City_Comparison.py
+│   ├── 5_NYC_Neighborhoods.py        # exploration only — fetches live from NYC Open Data, no DB
+│   └── 10_DC_Neighborhood_Analysis.py  # choropleth + drill-down; own nbhd_* filter state
 ├── lib/
 │   ├── db.py                # SQLAlchemy engine (cached) + run_query helper
 │   ├── filters.py           # Header filter widgets + Filters dataclass
@@ -85,6 +89,8 @@ lib.filters ──→ lib.db (via get_available_months)
 - **Source of truth = `p_*` keys in `st.session_state`.** These are user-owned (explicit writes) so they survive page navigation. Streamlit prunes widget-bound state on navigation; only direct `st.session_state["..."] = value` writes persist.
 - **Widgets render without `key=`.** Each render, `lib/filters.py` reads `p_*`, passes the matching `index=` / `value=` to the widget, then writes the widget's return back to `p_*`. Single source of truth, no widget-state race.
 - The keys are: `p_system`, `p_month`, `p_range_start`, `p_range_end`, `p_is_range`.
+- **`10_DC_Neighborhood_Analysis.py` is intentionally isolated** — it uses its own `nbhd_*` session-state keys and does not call `render_header_filters()`. A DC-only page must not be affected by the global System filter (e.g. filtering to "NYC" would break it).
+- **`5_NYC_Neighborhoods.py` has no database dependency** — it fetches GeoJSON directly from the NYC Open Data API (`data.cityofnewyork.us`) at startup, cached for 24 hours. It is a temporary exploration page and does not connect to Postgres.
 
 ### Caching layers
 - **`@st.cache_resource`** wraps the SQLAlchemy engine in `lib/db.py`. One engine per Streamlit session.

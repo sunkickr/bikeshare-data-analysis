@@ -145,6 +145,29 @@ For architecture / module structure, see [ARCHITECTURE.md](ARCHITECTURE.md).
 - Active Stations metric requires a `COUNT(DISTINCT)` over `fct_rides` — the only `fct_rides` scan on this page.
 - **What could break:** breaking the query into multiple smaller queries means multiple cache entries to keep coherent on every render.
 
+## DC Neighborhood Analysis page (`pages/10_DC_Neighborhood_Analysis.py`)
+
+### F24. DC choropleth map with boundary toggle
+- Choropleth map of DC colored by the selected metric, with a radio toggle between two boundary definitions: **OSM Neighborhoods (117)** and **Planning Clusters (39)**.
+- Metric selector in the sidebar: total rides, rides/km², rides/1k residents, member %, avg trip duration.
+- Color scale clamped to the p05–p95 range so outlier zones don't wash out the rest of the map.
+- Clicking a zone outlines it in white and populates a detail card in the sidebar.
+- Basemap: `open-street-map` (light background chosen to make colored polygons pop; differs intentionally from the `carto-darkmatter` basemap used on Stations & Routes).
+- **What could break:** the page reads GeoJSON from `data/geo/dc_neighborhoods_osm.geojson` and `data/geo/dc_clusters.geojson` via absolute path relative to the page file — moving the page file or the `data/geo/` folder breaks the load. The `_load_geojson` cache has no TTL (files are static); the `_load_data` query cache is `ttl=3600`.
+
+### F25. Click-to-drill neighborhood detail card
+- Selecting a zone (by map click or table row click) shows a detail card in the sidebar with 8 metrics: total rides, member %, rides/km², rides/1k residents, avg duration, area, population, and median household income.
+- Selection is stored in `st.session_state["nbhd_selected"]`; clearing it via the ✕ button resets both the sidebar card and the white polygon outline in a single rerun.
+- **What could break:** the zone's `zone_id` in the data must match the GeoJSON feature's property key exactly (e.g. `neighborhood_name` for OSM, `cluster_id` for clusters). A seed or GeoJSON update that renames or reformats these keys silently stops the outline and detail card from appearing for affected zones.
+
+### F26. NYC Neighborhoods exploration page (`pages/5_NYC_Neighborhoods.py`)
+- Temporary exploration page showing 262 NYC Neighborhood Tabulation Areas (NTAs) from NYC Open Data, color-coded by borough.
+- **Not connected to the database** — fetches GeoJSON from `data.cityofnewyork.us` at startup, cached for 24 hours (`ttl=86_400`). Fails gracefully with `st.error` on `URLError`.
+- Sidebar shows borough counts and a search box to filter neighborhoods by name.
+- A checkbox toggles visibility of non-residential areas (parks, airports, cemeteries, Rikers).
+- Does not use the global filter bar or `p_*` session state.
+- **What could break:** the NYC Open Data endpoint changing its schema (field names `nta2020`, `ntaname`, `boroname`, `ntatype`) would silently produce empty columns. Upgrading past Plotly 5.x requires migrating `choropleth_mapbox` → `choropleth_map`.
+
 ---
 
 ## Reference: query → page mapping
@@ -171,3 +194,5 @@ For architecture / module structure, see [ARCHITECTURE.md](ARCHITECTURE.md).
 | `rides_by_hour` | F17 |
 | `rides_by_dow` | F18 |
 | `city_summary` | F20, F21, F22 |
+| `_load_data` (inline, `agg_rides_by_neighborhood` or `agg_rides_by_cluster`) | F24, F25 |
+| NYC Open Data fetch (external, no DB) | F26 |

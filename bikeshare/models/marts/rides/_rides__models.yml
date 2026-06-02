@@ -82,6 +82,26 @@ models:
         tests:
           - not_null
 
+  - name: agg_rides_by_cluster
+    description: |
+      One row per DC planning cluster per month. Uses the 39 official DC
+      planning clusters instead of OSM neighbourhood polygons. Identical
+      structure to agg_rides_by_neighborhood — allows side-by-side comparison
+      of the two boundary definitions in the dashboard.
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - cluster_id
+              - started_month
+    columns:
+      - name: cluster_id
+        tests:
+          - not_null
+      - name: started_month
+        tests:
+          - not_null
+
   - name: agg_rides_daily
     description: |
       Daily ride counts and duration metrics, sliced by system, member type,
