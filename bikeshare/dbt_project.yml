@@ -55,5 +55,35 @@ models:
     marts:
       +materialized: table
       +schema: marts
+seeds:
+  bikeshare:
+    +schema: seeds
+    dc_neighborhoods:
+      +column_types:
+        area_km2:     numeric
+        centroid_lat: numeric
+        centroid_lng: numeric
+    dc_neighborhood_population:
+      +column_types:
+        population:               bigint
+        households:               bigint
+        median_household_income:  numeric
+    dc_station_neighborhoods:
+      +column_types:
+        station_id: text
+    dc_clusters:
+      +column_types:
+        area_km2:     numeric
+        centroid_lat: numeric
+        centroid_lng: numeric
+    dc_cluster_population:
+      +column_types:
+        population:               bigint
+        households:               bigint
+        median_household_income:  numeric
+    dc_station_clusters:
+      +column_types:
+        station_id: text
+
 flags:
   require_generic_test_arguments_property: true

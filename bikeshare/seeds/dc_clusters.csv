@@ -1,0 +1,40 @@
+cluster_id,cluster_display_name,area_km2,centroid_lat,centroid_lng
+Cluster 1,"Kalorama Heights, Adams Morgan, Lanier Heights",1.8945,38.919423,-77.046517
+Cluster 10,"Hawthorne, Barnaby Woods, Chevy Chase",4.9442,38.967997,-77.06378
+Cluster 11,"Friendship Heights, American University Park, Tenleytown",4.1894,38.950184,-77.084052
+Cluster 12,"North Cleveland Park, Forest Hills, Van Ness",3.2183,38.947936,-77.061292
+Cluster 13,"Spring Valley, Palisades, Wesley Heights, Foxhall Crescent, Foxhall Village, Georgetown Reservoir",9.0835,38.927202,-77.097163
+Cluster 14,"Cathedral Heights, McLean Gardens, Glover Park",2.9427,38.929003,-77.077847
+Cluster 15,"Cleveland Park, Woodley Park, Massachusetts Avenue Heights, Woodland-Normanstone Terrace",3.984,38.929912,-77.061948
+Cluster 16,"Colonial Village, Shepherd Park, North Portal Estates",2.2457,38.985778,-77.037019
+Cluster 17,"Takoma, Brightwood, Manor Park",4.4797,38.967163,-77.02181
+Cluster 18,"Brightwood Park, Crestwood, Petworth",6.4974,38.947782,-77.029233
+Cluster 19,"Lamont Riggs, Queens Chapel, Fort Totten, Pleasant Hill",3.6056,38.954836,-77.004528
+Cluster 2,"Columbia Heights, Mt. Pleasant, Pleasant Plains, Park View",3.4003,38.929702,-77.031451
+Cluster 20,"North Michigan Park, Michigan Park, University Heights",3.978,38.943555,-76.991123
+Cluster 21,"Edgewood, Bloomingdale, Truxton Circle, Eckington",6.0312,38.923743,-77.006447
+Cluster 22,"Brookland, Brentwood, Langdon",4.814,38.92623,-76.982185
+Cluster 23,"Ivy City, Arboretum, Trinidad, Carver Langston",3.5163,38.908162,-76.983572
+Cluster 24,"Woodridge, Fort Lincoln, Gateway",3.7149,38.926982,-76.962278
+Cluster 25,"Union Station, Stanton Park, Kingman Park",4.1501,38.897964,-76.991183
+Cluster 26,"Capitol Hill, Lincoln Park",4.5037,38.885098,-76.988615
+Cluster 27,"Near Southeast, Navy Yard",1.6192,38.87592,-76.999001
+Cluster 28,Historic Anacostia,1.3391,38.863112,-76.98439
+Cluster 29,"Eastland Gardens, Kenilworth",1.597,38.910747,-76.943964
+Cluster 3,"Howard University, Le Droit Park, Cardozo/Shaw",1.8602,38.919609,-77.022073
+Cluster 30,"Mayfair, Hillbrook, Mahaning Heights",2.5249,38.8999,-76.948162
+Cluster 31,"Deanwood, Burrville, Grant Park, Lincoln Heights, Fairmont Heights",3.3308,38.899427,-76.92693
+Cluster 32,"River Terrace, Benning, Greenway, Dupont Park",4.2863,38.884216,-76.951391
+Cluster 33,"Capitol View, Marshall Heights, Benning Heights",3.4677,38.884287,-76.932321
+Cluster 34,"Twining, Fairlawn, Randle Highlands, Penn Branch, Fort Davis Park, Fort Dupont",4.9268,38.871439,-76.965554
+Cluster 35,"Fairfax Village, Naylor Gardens, Hillcrest, Summit Park",1.9067,38.860637,-76.96065
+Cluster 36,"Woodland/Fort Stanton, Garfield Heights, Knox Hill",1.1196,38.855603,-76.970606
+Cluster 37,"Sheridan, Barry Farm, Buena Vista",2.0526,38.859838,-76.992401
+Cluster 38,"Douglas, Shipley Terrace",2.368,38.845559,-76.979929
+Cluster 39,"Congress Heights, Bellevue, Washington Highlands",4.8867,38.833971,-77.000262
+Cluster 4,"Georgetown, Burleith/Hillandale",3.3818,38.910271,-77.067301
+Cluster 5,"West End, Foggy Bottom, GWU",1.3587,38.901039,-77.049827
+Cluster 6,"Dupont Circle, Connecticut Avenue/K Street",2.2865,38.908441,-77.040987
+Cluster 7,"Shaw, Logan Circle",1.4639,38.909794,-77.025377
+Cluster 8,"Downtown, Chinatown, Penn Quarters, Mount Vernon Square, North Capitol Street",2.9376,38.899814,-77.021004
+Cluster 9,"Southwest Employment Area, Southwest/Waterfront, Fort McNair, Buzzard Point",3.5174,38.877843,-77.017642

@@ -61,6 +61,27 @@ models:
         tests:
           - not_null
 
+  - name: agg_rides_by_neighborhood
+    description: |
+      One row per DC OSM neighbourhood per month. Joins fct_rides to the
+      dc_station_neighborhoods seed (420 DC stations) and the
+      dc_neighborhood_population seed (Census ACS 2023). Derived metrics
+      (per-resident, per-km², member %) are computed at query time so
+      multi-month aggregations stay mathematically correct.
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - neighborhood_name
+              - started_month
+    columns:
+      - name: neighborhood_name
+        tests:
+          - not_null
+      - name: started_month
+        tests:
+          - not_null
+
   - name: agg_rides_daily
     description: |
       Daily ride counts and duration metrics, sliced by system, member type,

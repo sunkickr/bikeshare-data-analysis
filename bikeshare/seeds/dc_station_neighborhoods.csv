@@ -1,0 +1,421 @@
+station_id,neighborhood_name
+22907,Gateway
+30200,Chinatown
+30201,Chinatown
+31100,Golden Triangle
+31101,Cardozo/Shaw
+31102,Columbia Heights
+31104,Adams Morgan
+31105,Columbia Heights
+31106,Lanier Heights
+31107,Mount Pleasant
+31108,Southwest Waterfront
+31109,Cardozo/Shaw
+31110,Dupont Circle
+31111,Cardozo/Shaw
+31112,Lanier Heights
+31113,Adams Morgan
+31114,Adams Morgan
+31115,Pleasant Plains
+31116,Adams Morgan
+31117,Columbia Heights
+31118,Le Droit Park
+31119,Columbia Heights
+31120,Cardozo/Shaw
+31121,Woodley Park
+31122,Columbia Heights
+31123,Columbia Heights
+31124,Columbia Heights
+31125,Greater U Street Historic District
+31126,Columbia Heights
+31127,George Washington University
+31128,West End
+31129,Golden Triangle
+31130,Cardozo/Shaw
+31131,Columbia Heights
+31132,Cardozo/Shaw
+31133,Adams Morgan
+31134,Cardozo/Shaw
+31135,Adams Morgan
+31136,Columbia Heights
+31137,Park View
+31138,Howard University
+31139,Golden Triangle
+31140,Golden Triangle
+31200,Dupont Circle
+31201,Logan Circle/Shaw
+31202,Logan Circle/Shaw
+31203,Logan Circle/Shaw
+31204,Foggy Bottom
+31205,George Washington University
+31206,George Washington University
+31207,Howard University
+31208,Navy Yard
+31209,Navy Yard
+31210,Dupont Circle
+31211,Foggy Bottom
+31212,West End
+31213,Golden Triangle
+31214,Dupont Circle
+31215,Georgetown
+31216,Chinatown
+31217,Southwest Employment Area
+31218,Southwest Employment Area
+31219,Chinatown
+31220,Foggy Bottom
+31221,Golden Triangle
+31222,Golden Triangle
+31223,Logan Circle/Shaw
+31224,Golden Triangle
+31225,Georgetown
+31226,Georgetown
+31227,Chinatown
+31228,Chinatown
+31229,Dupont Circle
+31230,Chinatown
+31231,Chinatown
+31232,Chinatown
+31233,Golden Triangle
+31234,Dupont Circle
+31235,George Washington University
+31236,Georgetown
+31237,West End
+31238,Chinatown
+31239,Golden Triangle
+31240,George Washington University
+31241,Blagden Alley-Naylor Court Historic District
+31242,Golden Triangle
+31243,Southwest Employment Area
+31244,Southwest Employment Area
+31245,Logan Circle/Shaw
+31246,Georgetown
+31247,Southwest Employment Area
+31248,Southwest Employment Area
+31249,The Wharf
+31250,Golden Triangle
+31251,Blagden Alley-Naylor Court Historic District
+31252,Golden Triangle
+31253,Golden Triangle
+31254,Golden Triangle
+31255,West End
+31256,Chinatown
+31257,George Washington University
+31258,Foggy Bottom
+31259,George Washington University
+31260,Foggy Bottom
+31261,George Washington University
+31262,Chinatown
+31263,Chinatown
+31264,Downtown East
+31265,Chinatown
+31266,Mount Vernon Square
+31267,Dupont Circle
+31268,Cardozo/Shaw
+31269,Capitol Hill
+31270,Chinatown
+31271,Downtown East
+31272,Southwest Employment Area
+31273,The Wharf
+31274,Chinatown
+31275,George Washington University
+31276,Golden Triangle
+31277,Golden Triangle
+31278,Dupont Circle
+31279,Golden Triangle
+31280,Logan Circle/Shaw
+31281,Logan Circle/Shaw
+31282,Dupont Circle
+31283,Blagden Alley-Naylor Court Historic District
+31284,George Washington University
+31285,Dupont Circle
+31286,Logan Circle/Shaw
+31287,Southwest Employment Area
+31288,Downtown East
+31289,Foggy Bottom
+31290,George Washington University
+31291,Golden Triangle
+31292,George Washington University
+31293,Georgetown
+31294,Southwest Employment Area
+31295,Georgetown
+31296,Lanier Heights
+31297,Foggy Bottom
+31298,Golden Triangle
+31299,Dupont Circle
+31300,Van Ness
+31301,Spring Valley
+31302,McLean Gardens
+31303,Tenleytown
+31304,Massachusetts Avenue Heights
+31305,Cleveland Park
+31306,Glover Park
+31307,Woodley Park
+31308,Tenleytown
+31309,Tenleytown
+31310,North Cleveland Park
+31311,Logan Circle/Shaw
+31312,Georgetown
+31313,Van Ness
+31314,Georgetown
+31315,Barnaby Woods
+31316,Tenleytown
+31317,American University Park
+31318,Forest Hills
+31319,Tenleytown
+31320,Cathedral Heights
+31321,Chinatown
+31322,Foxhall Crescent
+31323,Woodley Park
+31324,Dupont Circle
+31325,Foxhall Village
+31326,Foxhall Village
+31327,Logan Circle/Shaw
+31328,George Washington University
+31329,Golden Triangle
+31330,Dupont Circle
+31331,The Palisades
+31332,Cardozo/Shaw
+31333,McLean Gardens
+31334,The Palisades
+31335,Golden Triangle
+31336,Logan Circle/Shaw
+31337,Georgetown
+31338,Cleveland Park
+31339,Mount Pleasant
+31340,Bloomingdale
+31390,Foxhall Crescent
+31391,Wesley Heights
+31392,Glover Park
+31393,Cathedral Heights
+31394,Cathedral Heights
+31395,Cathedral Heights
+31400,Petworth
+31401,Petworth
+31402,16th Street Heights
+31403,Brightwood Park
+31404,Petworth
+31405,Petworth
+31406,Petworth
+31407,16th Street Heights
+31408,Lamond Riggs
+31411,Brightwood Park
+31412,Lamond Riggs
+31413,Manor Park
+31414,Manor Park
+31415,Brightwood Park
+31416,Shepherd Park
+31417,Petworth
+31418,Fort Totten
+31419,Park View
+31420,Crestwood
+31421,Petworth
+31422,Barnaby Woods
+31423,Manor Park
+31424,Brightwood Park
+31425,Shepherd Park
+31426,Petworth
+31427,Lamond Riggs
+31428,Barnaby Woods
+31429,Foggy Bottom
+31500,Eckington
+31501,University Heights
+31502,University Heights
+31503,Truxton Circle
+31504,University Heights
+31505,Eckington
+31506,Bloomingdale
+31507,Stronghold
+31508,NoMa
+31509,Logan Circle/Shaw
+31510,Langdon
+31511,Edgewood
+31512,Kingman Park
+31513,Eckington
+31514,Edgewood
+31515,Fort Totten
+31516,Eckington
+31517,Eckington
+31518,Brentwood
+31519,Truxton Circle
+31520,Gateway
+31521,Woodridge
+31522,Eckington
+31523,Bloomingdale
+31524,Brentwood
+31525,Kingman Park
+31526,Brentwood
+31527,Bloomingdale
+31528,University Heights
+31529,Edgewood
+31530,Brentwood
+31531,Edgewood
+31532,NoMa
+31533,Eckington
+31534,Edgewood
+31535,Brentwood
+31536,NoMa
+31537,Fort Lincoln
+31538,Fort Lincoln
+31539,Gateway
+31540,NoMa
+31541,University Heights
+31542,University Heights
+31543,Woodridge
+31544,Woodridge
+31545,Woodridge
+31546,University Heights
+31600,Mount Vernon Square
+31601,Hill East
+31602,Columbia Heights
+31603,NoMa
+31604,Downtown East
+31605,Capitol Hill
+31606,Capitol Hill
+31607,Capitol Hill
+31608,Capitol Hill
+31609,Southwest Waterfront
+31610,Capitol Hill
+31611,Stanton Park
+31612,Stanton Park
+31615,Stanton Park
+31616,NoMa
+31617,Kingman Park
+31618,Stanton Park
+31619,Capitol Hill
+31620,Chinatown
+31621,Downtown East
+31622,Stanton Park
+31623,NoMa
+31624,Downtown East
+31625,Capitol Hill
+31626,Hill East
+31627,NoMa
+31628,Near Southeast
+31629,Stanton Park
+31630,Hill East
+31631,Stanton Park
+31632,Kingman Park
+31633,Southwest Employment Area
+31634,Navy Yard
+31635,Near Southeast
+31636,Truxton Circle
+31637,NoMa
+31638,North Capitol Street
+31639,NoMa
+31640,Stanton Park
+31641,Stanton Park
+31642,North Capitol Street
+31643,Capitol Hill
+31644,Capitol Hill
+31645,NoMa
+31646,Southwest Waterfront
+31647,Stanton Park
+31648,Buzzard Point
+31649,Columbia Heights
+31650,Near Southeast
+31651,Columbia Heights
+31652,Near Southeast
+31653,Mount Vernon Square
+31654,Southwest Waterfront
+31655,Downtown East
+31656,Kingman Park
+31657,Stanton Park
+31658,Kingman Park
+31659,Capitol Hill
+31660,Stanton Park
+31661,Stanton Park
+31662,NoMa
+31663,Capitol Hill
+31664,Buzzard Point
+31665,Hill East
+31666,Southwest Waterfront
+31667,Buzzard Point
+31668,Navy Yard
+31669,Near Southeast
+31670,Chinatown
+31671,Marshall Heights
+31672,Stanton Park
+31673,Southwest Waterfront
+31674,Southwest Waterfront
+31675,NoMa
+31676,Buzzard Point
+31677,North Capitol Street
+31678,Southwest Waterfront
+31680,Southwest Waterfront
+31699,Capitol Hill
+31700,Hillcrest
+31701,Dupont Park
+31702,Twining
+31703,Central Northeast
+31704,Central Northeast
+31705,Benning
+31706,Fairfax Village
+31707,Capitol View
+31708,River Terrace
+31710,Lincoln Heights
+31711,Deanwood
+31712,Kingman Park
+31713,Burrville
+31714,Grant Park
+31715,Fort Dupont
+31716,Hill East
+31717,Central Northeast
+31718,Benning Ridge
+31719,Langston
+31720,Barney Circle
+31721,River Terrace
+31722,Marshall Heights
+31723,Civic Betterment
+31724,Fort Davis Park
+31725,Kingman Park
+31726,Greenway
+31727,Hill East
+31728,Capitol View
+31730,Barnaby Woods
+31731,Fort Totten
+31800,Congress Heights
+31801,Hillsdale
+31802,Fairlawn
+31803,Anacostia
+31804,Fairlawn
+31805,Fairlawn
+31806,Congress Heights
+31808,Anacostia
+31811,Bellevue
+31812,Fairlawn
+31813,Douglass
+31814,Shipley Terrace
+31815,Douglass
+31816,Congress Heights
+31817,Bellevue
+31818,Washington Highlands
+31819,Bellevue
+31820,Barney Circle
+31822,Hillsdale
+31823,Washington Highlands
+31824,Congress Heights
+31825,Fort Stanton
+31826,Fairlawn
+31827,Barry Farm
+31828,Near Southeast
+31829,Anacostia
+31830,Washington Highlands
+31831,Fairlawn
+31982,Dupont Circle
+32140,Adams Morgan
+32226,Golden Triangle
+32301,Golden Triangle
+32399,Columbia Heights
+32901,Manor Park
+33000,Georgetown
+33001,Buzzard Point
+33002,Mount Vernon Square
+33101,Adams Morgan
+33200,Golden Triangle
+33201,Manor Park
+33202,Woodley Park
+33203,Barry Farm
+33204,Columbia Heights
+33205,Georgetown
+33206,Georgetown
+33207,Fort Totten

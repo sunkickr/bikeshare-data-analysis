@@ -8,6 +8,8 @@ logs/
 
 # ── Raw data (large CSVs, loaded separately) ──────
 data/*
+!data/geo/
+!data/geo/**
 
 # ── Python ────────────────────────────────────────
 .venv/
@@ -19,6 +21,8 @@ __pycache__/
 dist/
 build/
 .eggs/
+cache/
+dashboard/cache/
 
 # ── dbt credentials (NEVER commit) ───────────────
 # profiles.yml lives in ~/.dbt/ outside this repo.
