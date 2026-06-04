@@ -75,8 +75,14 @@ def _load_data(table: str, id_col: str, month_start: date, month_end: date) -> p
             MAX(population)                                                    AS population,
             MAX(households)                                                    AS households,
             MAX(median_household_income)                                       AS median_household_income,
+            SUM(weekday_rides)                                                 AS weekday_rides,
+            SUM(weekend_rides)                                                 AS weekend_rides,
+            SUM(arrival_rides)                                                 AS arrival_rides,
+            SUM(arrival_rides) - SUM(total_rides)                             AS net_flow,
             ROUND(SUM(member_rides) * 100.0
                   / NULLIF(SUM(total_rides), 0), 1)                           AS member_pct,
+            ROUND(SUM(weekend_rides) * 100.0
+                  / NULLIF(SUM(total_rides), 0), 1)                           AS weekend_pct,
             ROUND(SUM(total_rides) * 1000.0
                   / NULLIF(MAX(population), 0), 1)                            AS rides_per_1k_residents,
             ROUND(SUM(total_rides)
@@ -119,6 +125,18 @@ def _detail_card(row: pd.Series, display_name: str) -> None:
     with c2:
         kv("Member %", row["member_pct"], "{:.1f}%",
            "Share of rides by registered members vs casual riders")
+
+    st.markdown("**Trip flow**")
+    c1, c2, c3 = st.columns(3)
+    with c1:
+        kv("Departures", row["total_rides"], "{:,.0f}",
+           "Rides starting in this zone")
+    with c2:
+        kv("Arrivals", row["arrival_rides"], "{:,.0f}",
+           "Rides ending in this zone")
+    with c3:
+        kv("Net inflow", row["net_flow"], "{:+,.0f}",
+           "Positive = net destination; negative = net origin")
 
     st.markdown("**Normalised activity**")
     c1, c2 = st.columns(2)
@@ -367,6 +385,10 @@ def main() -> None:
         display_df = sorted_df.rename(columns={
             "zone_id":                 "Zone",
             "total_rides":             "Total rides",
+            "arrival_rides":           "Arrivals",
+            "net_flow":                "Net inflow",
+            "weekday_rides":           "Weekday rides",
+            "weekend_rides":           "Weekend rides",
             "member_pct":              "Member %",
             "rides_per_km2":           "Rides/km²",
             "rides_per_1k_residents":  "Rides/1k residents",
@@ -374,7 +396,8 @@ def main() -> None:
             "population":              "Population",
             "median_household_income": "Median HH income",
         })[[
-            "Zone", "Total rides", "Member %",
+            "Zone", "Total rides", "Arrivals", "Net inflow",
+            "Weekday rides", "Weekend rides", "Member %",
             "Rides/km²", "Rides/1k residents",
             "Avg duration (min)", "Population", "Median HH income",
         ]]
