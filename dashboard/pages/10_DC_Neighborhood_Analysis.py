@@ -54,6 +54,10 @@ _METRICS = {
     "rides_per_1k_residents": {"label": "Rides per 1,000 residents", "fmt": "{:,.0f}"},
     "member_pct":             {"label": "Member ride %",             "fmt": "{:.1f}"},
     "avg_duration_minutes":   {"label": "Avg trip duration (min)",   "fmt": "{:.1f}"},
+    "electric_pct":           {"label": "E-bike ride %",             "fmt": "{:.1f}"},
+    "round_trip_pct":         {"label": "Round trip %",              "fmt": "{:.1f}"},
+    "night_owl_pct":          {"label": "Night owl % (12–5am)",      "fmt": "{:.1f}"},
+    "rides_per_station":      {"label": "Rides per station",         "fmt": "{:.1f}"},
 }
 
 
@@ -79,6 +83,18 @@ def _load_data(table: str, id_col: str, month_start: date, month_end: date) -> p
             SUM(weekend_rides)                                                 AS weekend_rides,
             SUM(arrival_rides)                                                 AS arrival_rides,
             SUM(arrival_rides) - SUM(total_rides)                             AS net_flow,
+            SUM(electric_rides)                                                AS electric_rides,
+            ROUND(SUM(electric_rides) * 100.0
+                  / NULLIF(SUM(total_rides), 0), 1)                           AS electric_pct,
+            SUM(round_trip_rides)                                              AS round_trip_rides,
+            SUM(night_owl_rides)                                               AS night_owl_rides,
+            MAX(station_count)                                                 AS station_count,
+            ROUND(SUM(round_trip_rides) * 100.0
+                  / NULLIF(SUM(total_rides), 0), 1)                           AS round_trip_pct,
+            ROUND(SUM(night_owl_rides) * 100.0
+                  / NULLIF(SUM(total_rides), 0), 1)                           AS night_owl_pct,
+            ROUND(SUM(total_rides)::numeric
+                  / NULLIF(MAX(station_count), 0), 1)                         AS rides_per_station,
             ROUND(SUM(member_rides) * 100.0
                   / NULLIF(SUM(total_rides), 0), 1)                           AS member_pct,
             ROUND(SUM(weekend_rides) * 100.0
@@ -139,20 +155,35 @@ def _detail_card(row: pd.Series, display_name: str) -> None:
            "Positive = net destination; negative = net origin")
 
     st.markdown("**Normalised activity**")
-    c1, c2 = st.columns(2)
+    c1, c2, c3 = st.columns(3)
     with c1:
         kv("Rides / km²", row["rides_per_km2"], "{:,.0f}",
            "Spatial density of use")
     with c2:
         kv("Rides / 1k residents", row["rides_per_1k_residents"], "{:,.0f}",
            "Residential adoption — very high for low-population areas")
+    with c3:
+        kv("Rides / station", row["rides_per_station"], "{:.1f}",
+           "Average rides per physical station in this zone")
+
+    st.markdown("**Usage patterns**")
+    c1, c2 = st.columns(2)
+    with c1:
+        kv("Round trip %", row["round_trip_pct"], "{:.1f}%",
+           "Rides that started and ended at the same station")
+    with c2:
+        kv("Night owl %", row["night_owl_pct"], "{:.1f}%",
+           "Rides starting midnight–5am")
 
     st.markdown("**Trip character**")
-    c1, c2 = st.columns(2)
+    c1, c2, c3 = st.columns(3)
     with c1:
         kv("Avg duration (min)", row["avg_duration_minutes"], "{:.1f}")
     with c2:
         kv("Area (km²)", row["area_km2"], "{:.2f}")
+    with c3:
+        kv("E-bike %", row["electric_pct"], "{:.1f}%",
+           "Share of rides taken on an electric bike")
 
     st.markdown("**Population context**")
     c1, c2 = st.columns(2)
@@ -387,6 +418,10 @@ def main() -> None:
             "total_rides":             "Total rides",
             "arrival_rides":           "Arrivals",
             "net_flow":                "Net inflow",
+            "electric_pct":            "E-bike %",
+            "round_trip_pct":          "Round trip %",
+            "night_owl_pct":           "Night owl %",
+            "rides_per_station":       "Rides/station",
             "weekday_rides":           "Weekday rides",
             "weekend_rides":           "Weekend rides",
             "member_pct":              "Member %",
@@ -397,6 +432,7 @@ def main() -> None:
             "median_household_income": "Median HH income",
         })[[
             "Zone", "Total rides", "Arrivals", "Net inflow",
+            "E-bike %", "Round trip %", "Night owl %", "Rides/station",
             "Weekday rides", "Weekend rides", "Member %",
             "Rides/km²", "Rides/1k residents",
             "Avg duration (min)", "Population", "Median HH income",

@@ -85,8 +85,16 @@ models:
         description: Rides that started Monday–Friday (started_dow 1–5).
       - name: weekend_rides
         description: Rides that started Saturday–Sunday (started_dow 6–7).
+      - name: electric_rides
+        description: Rides taken on an electric bike.
+      - name: round_trip_rides
+        description: Rides that started and ended at the same station (is_round_trip = true).
+      - name: night_owl_rides
+        description: Rides starting midnight–5am (is_night_owl = true, started_hour 0–4).
       - name: arrival_rides
         description: Rides that ended in this zone (bucketed by started_at month per project convention).
+      - name: station_count
+        description: Number of stations mapped to this zone in the seed CSV.
 
   - name: agg_rides_by_cluster
     description: |
@@ -111,8 +119,16 @@ models:
         description: Rides that started Monday–Friday (started_dow 1–5).
       - name: weekend_rides
         description: Rides that started Saturday–Sunday (started_dow 6–7).
+      - name: electric_rides
+        description: Rides taken on an electric bike.
+      - name: round_trip_rides
+        description: Rides that started and ended at the same station (is_round_trip = true).
+      - name: night_owl_rides
+        description: Rides starting midnight–5am (is_night_owl = true, started_hour 0–4).
       - name: arrival_rides
         description: Rides that ended in this zone (bucketed by started_at month per project convention).
+      - name: station_count
+        description: Number of stations mapped to this zone in the seed CSV.
 
   - name: agg_rides_daily
     description: |

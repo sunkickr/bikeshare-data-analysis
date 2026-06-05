@@ -12,8 +12,11 @@ WITH rides AS (
     SELECT
         start_station_id,
         member_casual,
+        rideable_type,
         duration_seconds,
         started_dow,
+        is_round_trip,
+        is_night_owl,
         DATE_TRUNC('month', started_at)::date AS started_month
     FROM {{ ref('fct_rides') }}
     WHERE system = 'capitalbikeshare'
@@ -54,6 +57,14 @@ arrivals AS (
 
 ),
 
+station_count AS (
+
+    SELECT neighborhood_name, COUNT(*) AS station_count
+    FROM {{ ref('dc_station_neighborhoods') }}
+    GROUP BY neighborhood_name
+
+),
+
 aggregated AS (
 
     SELECT
@@ -64,6 +75,9 @@ aggregated AS (
         COUNT(*) FILTER (WHERE r.member_casual = 'casual')            AS casual_rides,
         COUNT(*) FILTER (WHERE r.started_dow BETWEEN 1 AND 5)        AS weekday_rides,
         COUNT(*) FILTER (WHERE r.started_dow IN (6, 7))              AS weekend_rides,
+        COUNT(*) FILTER (WHERE r.rideable_type = 'electric_bike')    AS electric_rides,
+        COUNT(*) FILTER (WHERE r.is_round_trip)                       AS round_trip_rides,
+        COUNT(*) FILTER (WHERE r.is_night_owl)                        AS night_owl_rides,
         SUM(r.duration_seconds)                                        AS total_duration_seconds
     FROM rides r
     JOIN station_nbhd sn ON r.start_station_id = sn.station_id
@@ -79,8 +93,12 @@ SELECT
     a.casual_rides,
     a.weekday_rides,
     a.weekend_rides,
+    a.electric_rides,
+    a.round_trip_rides,
+    a.night_owl_rides,
     a.total_duration_seconds,
     COALESCE(arr.arrival_rides, 0) AS arrival_rides,
+    stc.station_count,
 
     -- Static context — repeats per month, used by dashboard to avoid extra joins
     m.area_km2,
@@ -92,7 +110,8 @@ SELECT
 
 FROM aggregated a
 JOIN nbhd_meta  m ON a.neighborhood_name = m.neighborhood_name
-LEFT JOIN nbhd_pop p   ON a.neighborhood_name = p.neighborhood_name
-LEFT JOIN arrivals arr  ON a.neighborhood_name = arr.neighborhood_name
-                       AND a.started_month = arr.started_month
+LEFT JOIN nbhd_pop p       ON a.neighborhood_name = p.neighborhood_name
+LEFT JOIN arrivals arr     ON a.neighborhood_name = arr.neighborhood_name
+                         AND a.started_month = arr.started_month
+LEFT JOIN station_count stc ON a.neighborhood_name = stc.neighborhood_name
 ORDER BY a.started_month DESC, a.total_rides DESC
