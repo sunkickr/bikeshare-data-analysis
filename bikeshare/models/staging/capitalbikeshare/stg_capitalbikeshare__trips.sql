@@ -46,6 +46,44 @@ renamed AS (
     FROM source
     WHERE ride_id IS NOT NULL
 
+),
+
+-- Source files occasionally republish the same ride_id across two adjacent
+-- monthly exports (boundary rides that start late in one month and end in the
+-- next). Keep one row per ride — the most recently loaded copy — so this view's
+-- stated grain (one row per ride) actually holds. This mirrors how fct_rides
+-- resolves the same collision via its delete+insert on the latest load.
+deduped AS (
+
+    SELECT *
+    FROM (
+        SELECT
+            *,
+            ROW_NUMBER() OVER (
+                PARTITION BY ride_id
+                ORDER BY _ingested_at DESC
+            ) AS _row_num
+        FROM renamed
+    ) ranked
+    WHERE _row_num = 1
+
 )
 
-SELECT * FROM renamed
+SELECT
+    ride_id,
+    rideable_type,
+    started_at,
+    ended_at,
+    start_station_name,
+    start_station_id,
+    end_station_name,
+    end_station_id,
+    start_lat,
+    start_lng,
+    end_lat,
+    end_lng,
+    member_casual,
+    _ingested_at,
+    _source_file,
+    system
+FROM deduped
