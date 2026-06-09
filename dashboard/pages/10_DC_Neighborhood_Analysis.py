@@ -46,6 +46,14 @@ _BOUNDARY_OPTIONS = {
         "display_col": "cluster_display_name",
         "feature_key": "properties.cluster_id",
     },
+    "block_group": {
+        "label":       "Block Groups (571)",
+        "geo":         _REPO_ROOT / "data" / "geo" / "dc_block_groups.geojson",
+        "table":       "analytics_marts.agg_rides_by_block_group",
+        "id_col":      "bg_geoid",
+        "display_col": "bg_name",
+        "feature_key": "properties.bg_geoid",
+    },
 }
 
 _METRICS = {

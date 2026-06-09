@@ -84,6 +84,38 @@ seeds:
     dc_station_clusters:
       +column_types:
         station_id: text
+    dc_census_tracts:
+      +column_types:
+        tract_geoid:  text
+        area_km2:     numeric
+        centroid_lat: numeric
+        centroid_lng: numeric
+    dc_census_tract_population:
+      +column_types:
+        tract_geoid:              text
+        population:               bigint
+        households:               bigint
+        median_household_income:  numeric
+    dc_station_census_tracts:
+      +column_types:
+        station_id:  text
+        tract_geoid: text
+    dc_block_groups:
+      +column_types:
+        bg_geoid:     text
+        area_km2:     numeric
+        centroid_lat: numeric
+        centroid_lng: numeric
+    dc_block_group_population:
+      +column_types:
+        bg_geoid:                 text
+        population:               bigint
+        households:               bigint
+        median_household_income:  numeric
+    dc_station_block_groups:
+      +column_types:
+        station_id: text
+        bg_geoid:   text
 
 flags:
   require_generic_test_arguments_property: true
