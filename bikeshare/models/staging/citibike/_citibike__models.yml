@@ -8,8 +8,11 @@ models:
       layer without column-by-column reconciliation.
     columns:
       - name: ride_id
+        description: >
+          NOT unique in this view — the source republishes some month-boundary
+          rides in two adjacent monthly files. Uniqueness is enforced downstream
+          in fct_rides (dedup + delete+insert).
         tests:
-          - unique
           - not_null
       - name: started_at
         tests:
