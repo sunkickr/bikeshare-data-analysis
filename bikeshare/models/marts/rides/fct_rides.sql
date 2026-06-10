@@ -30,6 +30,30 @@ WITH trips AS (
 
 ),
 
+deduped AS (
+
+    -- The same ride_id can appear in two adjacent monthly source files (a ride
+    -- that starts late one month and ends the next gets republished). Keep one
+    -- row per ride — the most recently loaded copy.
+    --
+    -- Placement matters: this runs AFTER the incremental filter above, so on a
+    -- normal run it only ranks the small new batch (cheap, and the _ingested_at
+    -- filter still pushes down to the raw scan). On --full-refresh it ranks
+    -- everything, so the unique test below holds in both modes.
+    SELECT *
+    FROM (
+        SELECT
+            *,
+            ROW_NUMBER() OVER (
+                PARTITION BY ride_id
+                ORDER BY _ingested_at DESC
+            ) AS _row_num
+        FROM trips
+    ) ranked
+    WHERE _row_num = 1
+
+),
+
 derived AS (
 
     SELECT
@@ -74,7 +98,7 @@ derived AS (
         _ingested_at,
         _source_file
 
-    FROM trips
+    FROM deduped
 
 ),
 

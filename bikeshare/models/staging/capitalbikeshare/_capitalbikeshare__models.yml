@@ -14,9 +14,11 @@ models:
       through this view.
     columns:
       - name: ride_id
-        description: Public ride identifier. Unique within this staging view.
+        description: >
+          Public ride identifier. NOT unique in this view — the source
+          republishes some month-boundary rides in two adjacent monthly files.
+          Uniqueness is enforced downstream in fct_rides (dedup + delete+insert).
         tests:
-          - unique
           - not_null
       - name: started_at
         description: Ride start timestamp (typed). Filter dashboards by this.
