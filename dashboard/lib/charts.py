@@ -10,6 +10,7 @@ import plotly.graph_objects as go
 import streamlit as st
 
 from lib.theme import (
+    BACKGROUND,
     DC_COLOR,
     MAP_BASE_COLOR,
     MAP_CENTER,
@@ -350,6 +351,66 @@ def station_route_map(
             bordercolor=SURFACE,
             borderwidth=1,
         ),
+    )
+    return fig
+
+
+def ranking_highlight_map(
+    geojson: dict,
+    *,
+    feature_key: str,
+    zone_id: str,
+    accent: str,
+    center_lat: float,
+    center_lng: float,
+    zoom: float = 12.0,
+    height: int = 360,
+) -> go.Figure:
+    """A DC choropleth that highlights a single neighborhood — the winner of a
+    ranking section — in `accent`, with every other zone left dim.
+
+    Built for the Neighborhood Rankings page: static (no click handling), centered
+    on the winner's centroid (which the mart carries, so no centroid math here).
+    `open-street-map` light basemap matches page 10 so the colored polygon pops.
+
+    Other neighborhoods are left clear (no fill) — only their boundary lines show,
+    drawn as a Mapbox `line` layer — so the basemap reads through and the winner is
+    the only filled zone. `feature_key` is the GeoJSON property path
+    (e.g. "properties.neighborhood_name"); `zone_id` is the winner's value for it.
+    """
+    # Winner-only fill, with hover. featureidkey matches this single location to
+    # its polygon in the geojson.
+    fig = go.Figure(
+        go.Choroplethmapbox(
+            geojson=geojson,
+            locations=[zone_id],
+            featureidkey=feature_key,
+            z=[1],
+            colorscale=[[0.0, accent], [1.0, accent]],
+            showscale=False,
+            marker=dict(line=dict(color=BACKGROUND, width=1), opacity=0.82),
+            hovertext=[zone_id],
+            hoverinfo="text",
+        )
+    )
+    fig.update_layout(
+        mapbox=dict(
+            style="open-street-map",
+            center=dict(lat=center_lat, lon=center_lng),
+            zoom=zoom,
+            # Every neighborhood boundary as a clear outline (no fill) beneath the
+            # winner's filled polygon — "the lines are there" for context.
+            layers=[dict(
+                sourcetype="geojson",
+                source=geojson,
+                type="line",
+                color=MAP_BASE_COLOR,
+                line=dict(width=1),
+            )],
+        ),
+        height=height,
+        margin=dict(l=0, r=0, t=0, b=0),
+        paper_bgcolor=BACKGROUND,
     )
     return fig
 

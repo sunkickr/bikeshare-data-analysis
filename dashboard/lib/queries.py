@@ -632,3 +632,47 @@ def city_summary(
         ORDER BY a.system
     """
     return run_query(sql, {"systems": list(systems), "month_start": month_start, "month_end": month_end})
+
+
+@st.cache_data(ttl=_CACHE_TTL, show_spinner=False)
+def neighborhood_rankings(min_population: int = 0, min_rides: int = 100) -> pd.DataFrame:
+    """Eligible DC OSM neighborhoods for the latest month, one row each, with all
+    eight ranking metrics plus the centroid (for map centering) and a `month`
+    column for the page caption.
+
+    DC-only: reads analytics_marts.agg_rides_by_neighborhood, which is unique per
+    (neighborhood_name, started_month), so a single-month filter yields one row per
+    neighborhood — no GROUP BY needed (unlike page 10's multi-month _load_data).
+
+    "Latest month" is resolved in-SQL via MAX(started_month) so the page always
+    reflects the freshest dbt run with no hardcoded date.
+
+    Eligibility floor: strictly more than `min_rides` rides in the month, AND —
+    only when `min_population > 0` — more than `min_population` residents. The
+    population floor defaults OFF; raising it guards the rides_per_resident
+    ranking from tiny-population zones with absurd per-capita ratios.
+    """
+    sql = """
+        SELECT
+            neighborhood_name,
+            started_month                                                    AS month,
+            total_rides,
+            population,
+            centroid_lat,
+            centroid_lng,
+            ROUND(member_rides    * 100.0 / NULLIF(total_rides, 0), 1)        AS member_pct,
+            ROUND(electric_rides  * 100.0 / NULLIF(total_rides, 0), 1)        AS electric_pct,
+            ROUND(round_trip_rides * 100.0 / NULLIF(total_rides, 0), 1)       AS round_trip_pct,
+            ROUND(night_owl_rides * 100.0 / NULLIF(total_rides, 0), 1)        AS night_owl_pct,
+            ROUND(total_rides::numeric / NULLIF(population, 0), 3)            AS rides_per_resident,
+            ROUND(total_rides::numeric / NULLIF(station_count, 0), 1)         AS rides_per_station,
+            ROUND(total_rides / NULLIF(area_km2, 0), 1)                       AS rides_per_km2
+        FROM analytics_marts.agg_rides_by_neighborhood
+        WHERE started_month = (
+            SELECT MAX(started_month) FROM analytics_marts.agg_rides_by_neighborhood
+        )
+          AND total_rides > :min_rides
+          AND (:min_population <= 0 OR population > :min_population)
+        ORDER BY total_rides DESC
+    """
+    return run_query(sql, {"min_population": min_population, "min_rides": min_rides})

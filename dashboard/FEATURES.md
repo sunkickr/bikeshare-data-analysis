@@ -168,6 +168,21 @@ For architecture / module structure, see [ARCHITECTURE.md](ARCHITECTURE.md).
 - Does not use the global filter bar or `p_*` session state.
 - **What could break:** the NYC Open Data endpoint changing its schema (field names `nta2020`, `ntaname`, `boroname`, `ntatype`) would silently produce empty columns. Upgrading past Plotly 5.x requires migrating `choropleth_mapbox` → `choropleth_map`.
 
+## Neighborhood Rankings page (`pages/11_Neighborhood_Rankings.py`)
+
+### F27. Neighborhood superlative rankings (DC)
+- Eight "superlative" awards for DC OSM neighborhoods, one section each, stacked vertically with dashed dividers and a per-section accent color (cycles `PASTEL_PALETTE`): **Superior Bike Neighborhood** (most total rides), **Bikeshare-Addicted Residents** (rides/1k residents), **Tourist Trap!** (lowest member %), **Most in Need of More Bike Stations!** (rides/station), **The Night Owl Neighborhood** (12–5am share), **Most Laid Back** (round-trip %), **Ride Density Champion** (rides/km²), **Ebike Lovers** (e-bike %).
+- Each section: superlative title, winning neighborhood name (large), its metric value + unit, a tagline, and 3 runner-ups (name + value) on the left; a static choropleth centered on and highlighting the winner in the section accent on the right (`ranking_highlight_map`, `open-street-map` basemap, non-clickable).
+- **Latest month only** — `MAX(started_month)` (currently May 2026), recomputed every dbt run, no hardcoded date. Caption shows the month + eligible-neighborhood count.
+- **Eligibility:** strictly more than 1,000 residents AND 1,000 rides in the month.
+- **Winner-only exclusivity:** awards are assigned in list order 1→8; a neighborhood wins at most one (greedy, ties broken by `total_rides`), but may still appear as a runner-up in any section — including ones it won elsewhere.
+- **DC-only, fully isolated:** does **not** call `render_header_filters()` — no system selector, no month picker, no session state. Powered by the cached `neighborhood_rankings` query.
+- **What could break:**
+  - Excluding prior winners from runner-ups, or de-duplicating runner-ups, changes the displayed lists — the "a winner can still be a runner-up" behavior is intentional (matches the spec's Dupont example).
+  - `ranking_highlight_map` matches the winner by `neighborhood_name` against the GeoJSON `properties.neighborhood_name`; a seed/GeoJSON rename that desyncs those keys leaves the winner unhighlighted (dim map) with no error.
+  - Removing the eligibility floor surfaces tiny low-population zones with absurd per-capita ratios as winners.
+  - The metric column names in `SUPERLATIVES` must match `neighborhood_rankings`' output columns (`member_pct`, `rides_per_resident`, `rides_per_station`, `night_owl_pct`, `round_trip_pct`, `rides_per_km2`, `electric_pct`, `total_rides`); renaming a column in the query without updating the page breaks that section.
+
 ---
 
 ## Reference: query → page mapping
@@ -195,4 +210,5 @@ For architecture / module structure, see [ARCHITECTURE.md](ARCHITECTURE.md).
 | `rides_by_dow` | F18 |
 | `city_summary` | F20, F21, F22 |
 | `_load_data` (inline, `agg_rides_by_neighborhood` or `agg_rides_by_cluster`) | F24, F25 |
+| `neighborhood_rankings` (`agg_rides_by_neighborhood`) | F27 |
 | NYC Open Data fetch (external, no DB) | F26 |
