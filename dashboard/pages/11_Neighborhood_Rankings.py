@@ -41,7 +41,7 @@ _RUNNER_UPS = 3
 # more than MIN_RIDES rides AND more than MIN_POPULATION residents — UNLESS it is
 # force-included below, and never if it is excluded below.
 # ═════════════════════════════════════════════════════════════════════════════
-MIN_RIDES = 400          # rides started in the neighborhood that month
+MIN_RIDES = 600          # rides started in the neighborhood that month
 MIN_POPULATION = 1000     # residents (set to 0 to disable the population floor)
 
 # Always exclude these neighborhoods by name — too small, or mostly downtown
@@ -56,6 +56,7 @@ EXCLUDED_NEIGHBORHOODS = {
     "Golden Triangle",
     "Cardozo/Shaw",
     "Greater U Street Historic District",
+    "Mount Vernon Square",
 }
 
 # Always INCLUDE these by name even if they fall below the thresholds above
