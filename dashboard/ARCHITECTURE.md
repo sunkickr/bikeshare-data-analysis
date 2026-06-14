@@ -50,7 +50,8 @@ dashboard/
 │   ├── 3_Time_Patterns.py
 │   ├── 4_City_Comparison.py
 │   ├── 5_NYC_Neighborhoods.py        # exploration only — fetches live from NYC Open Data, no DB
-│   └── 10_DC_Neighborhood_Analysis.py  # choropleth + drill-down; own nbhd_* filter state
+│   ├── 10_DC_Neighborhood_Analysis.py  # choropleth + drill-down; own nbhd_* filter state
+│   └── 11_Neighborhood_Rankings.py      # DC superlative rankings; latest month only, no filter bar
 ├── lib/
 │   ├── db.py                # SQLAlchemy engine (cached) + run_query helper
 │   ├── filters.py           # Header filter widgets + Filters dataclass
@@ -91,6 +92,7 @@ lib.filters ──→ lib.db (via get_available_months)
 - The keys are: `p_system`, `p_month`, `p_range_start`, `p_range_end`, `p_is_range`.
 - **`10_DC_Neighborhood_Analysis.py` is intentionally isolated** — it uses its own `nbhd_*` session-state keys and does not call `render_header_filters()`. A DC-only page must not be affected by the global System filter (e.g. filtering to "NYC" would break it).
 - **`5_NYC_Neighborhoods.py` has no database dependency** — it fetches GeoJSON directly from the NYC Open Data API (`data.cityofnewyork.us`) at startup, cached for 24 hours. It is a temporary exploration page and does not connect to Postgres.
+- **`11_Neighborhood_Rankings.py` is isolated and stateless** — like page 10 it does not call `render_header_filters()`, and it holds no session state at all. It always shows `MAX(started_month)` (DC-only superlative rankings), so there is nothing for the user to filter. Its winner-exclusive ranking logic is pure pandas over the cached `neighborhood_rankings` query.
 
 ### Caching layers
 - **`@st.cache_resource`** wraps the SQLAlchemy engine in `lib/db.py`. One engine per Streamlit session.
