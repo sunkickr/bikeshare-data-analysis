@@ -63,7 +63,7 @@ models:
 
   - name: agg_rides_by_neighborhood
     description: |
-      One row per DC OSM neighbourhood per month. Joins fct_rides to the
+      One row per DC OSM neighborhood per month. Joins fct_rides to the
       dc_station_neighborhoods seed (420 DC stations) and the
       dc_neighborhood_population seed (Census ACS 2023). Derived metrics
       (per-resident, per-km², member %) are computed at query time so
@@ -99,7 +99,7 @@ models:
   - name: agg_rides_by_cluster
     description: |
       One row per DC planning cluster per month. Uses the 39 official DC
-      planning clusters instead of OSM neighbourhood polygons. Identical
+      planning clusters instead of OSM neighborhood polygons. Identical
       structure to agg_rides_by_neighborhood — allows side-by-side comparison
       of the two boundary definitions in the dashboard.
     tests:

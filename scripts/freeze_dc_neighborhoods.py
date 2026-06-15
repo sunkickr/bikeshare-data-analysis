@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Freeze DC neighbourhood polygons from OpenStreetMap into two outputs:
+"""Freeze DC neighborhood polygons from OpenStreetMap into two outputs:
 
   data/geo/dc_neighborhoods_osm.geojson   — polygon file for the dashboard map
   bikeshare/seeds/dc_neighborhoods.csv    — tabular metadata for dbt
 
 Run this once to snapshot the boundaries. Re-run only when you want to
-deliberately update the neighbourhood definitions.
+deliberately update the neighborhood definitions.
 
 Usage:
     .venv/bin/python scripts/freeze_dc_neighborhoods.py
@@ -28,16 +28,16 @@ _METRIC_CRS = 32618
 
 
 def main() -> None:
-    print("Fetching DC neighbourhood polygons from OpenStreetMap...")
+    print("Fetching DC neighborhood polygons from OpenStreetMap...")
     gdf = ox.features_from_place(
         "Washington, DC, USA",
-        tags={"place": "neighbourhood"},
+        tags={"place": "neighborhood"},
     )
 
     # Keep only polygon features; point features are OSM label nodes.
     polys = gdf[gdf.geometry.geom_type == "Polygon"].copy()
     polys = polys.reset_index()
-    print(f"  {len(polys)} polygon neighbourhoods found")
+    print(f"  {len(polys)} polygon neighborhoods found")
 
     # Readable name — drop any rows with no name at all.
     polys["neighborhood_name"] = polys["name"].fillna("").str.strip()

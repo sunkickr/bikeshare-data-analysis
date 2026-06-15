@@ -49,7 +49,7 @@ def main() -> None:
     gdf["centroid_lat"] = gdf.geometry.centroid.y.round(6)
     gdf["centroid_lng"] = gdf.geometry.centroid.x.round(6)
 
-    # Normalise display name: use NBH_NAMES (the readable neighbourhood list).
+    # Normalise display name: use NBH_NAMES (the readable neighborhood list).
     # NAME ("Cluster 16") is the stable ID we use as the join key.
     gdf["cluster_id"]           = gdf["NAME"].str.strip()
     gdf["cluster_display_name"] = gdf["NBH_NAMES"].str.strip()

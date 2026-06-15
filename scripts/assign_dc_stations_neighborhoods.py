@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Assign each Capital Bikeshare station within DC city limits to its OSM
-neighbourhood via point-in-polygon join, with nearest-polygon fallback for
+neighborhood via point-in-polygon join, with nearest-polygon fallback for
 stations that fall in gaps between OSM polygons.
 
 Reads:
-  data/geo/dc_neighborhoods_osm.geojson  — frozen neighbourhood polygons
+  data/geo/dc_neighborhoods_osm.geojson  — frozen neighborhood polygons
   analytics_marts.dim_stations           — station lat/lng from Postgres
 
 Writes:
@@ -15,7 +15,7 @@ Methodology:
      and Maryland stations that are also part of the Capital Bikeshare network).
   2. Point-in-polygon join assigns stations that fall inside an OSM polygon.
   3. For the ~120 stations in gaps between polygons, nearest-centroid fallback
-     assigns them to the geographically closest neighbourhood.
+     assigns them to the geographically closest neighborhood.
 
 Usage:
     .venv/bin/python scripts/assign_dc_stations_neighborhoods.py
@@ -64,7 +64,7 @@ def _nearest_fallback(
     gaps: gpd.GeoDataFrame,
     nbhds: gpd.GeoDataFrame,
 ) -> pd.DataFrame:
-    """Assign gap stations to the nearest neighbourhood centroid."""
+    """Assign gap stations to the nearest neighborhood centroid."""
     gaps_m   = gaps.to_crs(_METRIC)
     nbhds_m  = nbhds.to_crs(_METRIC)
     centroids = nbhds_m.copy()
@@ -83,7 +83,7 @@ def main() -> None:
     dc_stations = _filter_to_dc(all_stations)
     print(f"  {len(dc_stations)} within DC city limits")
 
-    print("Loading frozen neighbourhood polygons...")
+    print("Loading frozen neighborhood polygons...")
     nbhds = gpd.read_file(GEO_IN)[["neighborhood_name", "geometry"]]
 
     print("Point-in-polygon join...")
@@ -107,7 +107,7 @@ def main() -> None:
     print(f"  Wrote {SEED_OUT} ({len(result)} rows)")
     print()
     nbhd_counts = result["neighborhood_name"].value_counts()
-    print("Stations per neighbourhood (top 10):")
+    print("Stations per neighborhood (top 10):")
     print(nbhd_counts.head(10).to_string())
 
 

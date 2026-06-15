@@ -100,7 +100,7 @@ def main() -> None:
             help="ntatype 0 = residential (197). Others: parks (40), cemeteries (14), institutional (8), airports (2), Rikers (1).",
         )
 
-    # ntatype '0' = residential neighbourhoods. All other codes are
+    # ntatype '0' = residential neighborhoods. All other codes are
     # parks, cemeteries, airports, institutional areas, and Rikers Island.
     df_map = df if show_nonresidential else df[df["ntatype"] == "0"]
     features_map = (

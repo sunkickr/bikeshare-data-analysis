@@ -1,6 +1,6 @@
--- DC neighbourhood ride aggregates — one row per neighbourhood per month.
+-- DC neighborhood ride aggregates — one row per neighborhood per month.
 --
--- Static neighbourhood metadata (area, population) repeats each month;
+-- Static neighborhood metadata (area, population) repeats each month;
 -- derived metrics (per-resident, per-km², member %) are intentionally
 -- omitted here and computed at query time so multi-month aggregations
 -- stay mathematically correct.

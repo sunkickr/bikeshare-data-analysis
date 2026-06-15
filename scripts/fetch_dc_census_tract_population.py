@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Fetch DC census-tract population directly from the Census ACS API.
 
-Unlike the neighbourhood and cluster population scripts, no spatial
+Unlike the neighborhood and cluster population scripts, no spatial
 interpolation is needed here — tracts are the native ACS unit, so the
 figures are exact (subject only to ACS survey margin of error).
 

@@ -1,7 +1,7 @@
 -- DC Neighborhood Cluster ride aggregates — one row per cluster per month.
 --
 -- Identical structure to agg_rides_by_neighborhood but uses the 39 official
--- DC planning clusters instead of OSM neighbourhood polygons. Allows the
+-- DC planning clusters instead of OSM neighborhood polygons. Allows the
 -- dashboard to compare the two boundary definitions side-by-side.
 
 WITH rides AS (

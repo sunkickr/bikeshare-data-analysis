@@ -1,4 +1,4 @@
-"""DC Neighborhood Analysis — click a neighbourhood on the map to see all
+"""DC Neighborhood Analysis — click a neighborhood on the map to see all
 dimensions: ride volume, density, adoption rate, member mix, trip duration,
 and Census population context.
 
@@ -355,7 +355,7 @@ def main() -> None:
     geojson = _load_geojson(boundary_key)
 
     if df.empty:
-        st.info("No neighbourhood data for the selected period.")
+        st.info("No neighborhood data for the selected period.")
         st.stop()
 
     selected = st.session_state["nbhd_selected"]
@@ -499,7 +499,7 @@ def main() -> None:
                 st.rerun()
 
     # ── Full table with clickable rows ────────────────────────────────────────
-    with st.expander("Full table — all neighbourhoods"):
+    with st.expander("Full table — all neighborhoods"):
         sort_col = st.selectbox(
             "Sort by",
             options=list(_METRICS.keys()),
@@ -567,7 +567,7 @@ def main() -> None:
                     _display_name_for(selected, boundary, geojson),
                 )
         else:
-            st.caption("Click a neighbourhood on the map.")
+            st.caption("Click a neighborhood on the map.")
 
 
 main()

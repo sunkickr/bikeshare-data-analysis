@@ -1,7 +1,7 @@
 -- DC Census tract ride aggregates — one row per tract per month.
 --
 -- Uses Census TIGER 2023 tract boundaries (~179 tracts). Unlike the
--- neighbourhood and cluster models, population data here is exact — tracts
+-- neighborhood and cluster models, population data here is exact — tracts
 -- are the native ACS unit, so no spatial interpolation is needed.
 --
 -- Only Capital Bikeshare rides are included (system = 'capitalbikeshare').

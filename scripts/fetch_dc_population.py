@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """Fetch DC census-tract population from the Census ACS API and spatially
-join it to the frozen OSM neighbourhood polygons.
+join it to the frozen OSM neighborhood polygons.
 
 Outputs:
   bikeshare/seeds/dc_neighborhood_population.csv
 
 Methodology: area-weighted interpolation. Each census tract's population is
-split across whichever neighbourhoods it overlaps, proportional to the share
-of the tract's area that falls inside each neighbourhood. Median household
+split across whichever neighborhoods it overlaps, proportional to the share
+of the tract's area that falls inside each neighborhood. Median household
 income is population-weighted across the tracts that contribute to each
-neighbourhood.
+neighborhood.
 
 Data source: ACS 5-year estimates, 2023 (covering 2019–2023).
 Census TIGER tract boundaries: 2023 vintage.
@@ -107,7 +107,7 @@ def _area_weighted_join(
     tracts: gpd.GeoDataFrame,
     pop_df: pd.DataFrame,
 ) -> pd.DataFrame:
-    """Area-weighted interpolation of tract population onto neighbourhood polygons."""
+    """Area-weighted interpolation of tract population onto neighborhood polygons."""
     tracts_m = tracts.to_crs(_METRIC_CRS)
     nbhds_m  = nbhds.to_crs(_METRIC_CRS)
 
@@ -153,7 +153,7 @@ def main() -> None:
     tracts = _fetch_tiger_tracts()
     print(f"  {len(tracts)} tract boundaries loaded")
 
-    print("Loading frozen neighbourhood polygons...")
+    print("Loading frozen neighborhood polygons...")
     nbhds = gpd.read_file(GEO_IN)[["neighborhood_name", "geometry"]]
 
     print("Running area-weighted spatial join...")
