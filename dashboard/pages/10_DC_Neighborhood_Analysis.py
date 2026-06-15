@@ -29,6 +29,11 @@ apply_plotly_defaults()
 
 _REPO_ROOT = Path(__file__).parent.parent.parent
 
+# Page accent — a mid-tone blue from the map's "Blues" choropleth scale, so the
+# accent matches the polygon fills. Same idea as the per-award accent colors on
+# the Neighborhood Rankings page.
+MAP_BLUE = "#4292C6"
+
 _BOUNDARY_OPTIONS = {
     "osm": {
         "label":       "OSM Neighborhoods (117)",
@@ -45,6 +50,14 @@ _BOUNDARY_OPTIONS = {
         "id_col":      "cluster_id",
         "display_col": "cluster_display_name",
         "feature_key": "properties.cluster_id",
+    },
+    "tract": {
+        "label":       "Census Tracts (206)",
+        "geo":         _REPO_ROOT / "data" / "geo" / "dc_census_tracts.geojson",
+        "table":       "analytics_marts.agg_rides_by_tract",
+        "id_col":      "tract_geoid",
+        "display_col": "tract_name",
+        "feature_key": "properties.tract_geoid",
     },
     "block_group": {
         "label":       "Block Groups (571)",
@@ -136,33 +149,40 @@ def _format_month(d: date) -> str:
 
 
 def _detail_card(row: pd.Series, display_name: str) -> None:
-    st.markdown(f"### {display_name}")
-    st.divider()
+    st.markdown(
+        f'<div style="color:{MAP_BLUE};font-size:1.6rem;font-weight:700;'
+        f'line-height:1.2;margin-bottom:2px">{display_name}</div>',
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+        f'<hr style="border:none;border-top:2px solid {MAP_BLUE};'
+        f'opacity:0.5;margin:4px 0 12px">',
+        unsafe_allow_html=True,
+    )
 
     def kv(label: str, value, fmt: str, help: str = "") -> None:
         st.metric(label=label, value=_fmt(value, fmt), help=help or None)
 
-    st.markdown("**Ride volume**")
-    c1, c2 = st.columns(2)
+    def section(label: str) -> None:
+        st.markdown(
+            f'<div style="color:{MAP_BLUE};font-size:0.8rem;font-weight:700;'
+            f'text-transform:uppercase;letter-spacing:0.05em;'
+            f'margin:6px 0 2px">{label}</div>',
+            unsafe_allow_html=True,
+        )
+
+    section("Rides summary")
+    c1, c2, c3 = st.columns(3)
     with c1:
-        kv("Total rides", row["total_rides"], "{:,.0f}")
+        kv("Total rides (departures)", row["total_rides"], "{:,.0f}")
     with c2:
         kv("Member %", row["member_pct"], "{:.1f}%",
            "Share of rides by registered members vs casual riders")
-
-    st.markdown("**Trip flow**")
-    c1, c2, c3 = st.columns(3)
-    with c1:
-        kv("Departures", row["total_rides"], "{:,.0f}",
-           "Rides starting in this zone")
-    with c2:
-        kv("Arrivals", row["arrival_rides"], "{:,.0f}",
-           "Rides ending in this zone")
     with c3:
-        kv("Net inflow", row["net_flow"], "{:+,.0f}",
-           "Positive = net destination; negative = net origin")
+        kv("E-bike %", row["electric_pct"], "{:.1f}%",
+           "Share of rides taken on an electric bike")
 
-    st.markdown("**Normalised activity**")
+    section("Normalised activity")
     c1, c2, c3 = st.columns(3)
     with c1:
         kv("Rides / km²", row["rides_per_km2"], "{:,.0f}",
@@ -174,31 +194,37 @@ def _detail_card(row: pd.Series, display_name: str) -> None:
         kv("Rides / station", row["rides_per_station"], "{:.1f}",
            "Average rides per physical station in this zone")
 
-    st.markdown("**Usage patterns**")
-    c1, c2 = st.columns(2)
+    section("Usage patterns")
+    c1, c2, c3 = st.columns(3)
     with c1:
         kv("Round trip %", row["round_trip_pct"], "{:.1f}%",
            "Rides that started and ended at the same station")
     with c2:
         kv("Night owl %", row["night_owl_pct"], "{:.1f}%",
            "Rides starting midnight–5am")
-
-    st.markdown("**Trip character**")
-    c1, c2, c3 = st.columns(3)
-    with c1:
-        kv("Avg duration (min)", row["avg_duration_minutes"], "{:.1f}")
-    with c2:
-        kv("Area (km²)", row["area_km2"], "{:.2f}")
     with c3:
-        kv("E-bike %", row["electric_pct"], "{:.1f}%",
-           "Share of rides taken on an electric bike")
+        kv("Avg duration (min)", row["avg_duration_minutes"], "{:.1f}")
 
-    st.markdown("**Population context**")
-    c1, c2 = st.columns(2)
-    with c1:
-        kv("Residents", row["population"], "{:,.0f}")
-    with c2:
-        kv("Median HH income", row["median_household_income"], "${:,.0f}")
+    with st.expander("Trip flow (departures & arrivals)", expanded=False):
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            kv("Departures", row["total_rides"], "{:,.0f}",
+               "Rides starting in this zone")
+        with c2:
+            kv("Arrivals", row["arrival_rides"], "{:,.0f}",
+               "Rides ending in this zone")
+        with c3:
+            kv("Net inflow", row["net_flow"], "{:+,.0f}",
+               "Positive = net destination; negative = net origin")
+
+    with st.expander("Neighborhood context", expanded=False):
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            kv("Residents", row["population"], "{:,.0f}")
+        with c2:
+            kv("Median HH income", row["median_household_income"], "${:,.0f}")
+        with c3:
+            kv("Area (km²)", row["area_km2"], "{:.2f}")
 
 
 def _polygon_outline(zone_id: str, geojson: dict, feature_key: str) -> tuple[list, list]:
@@ -233,19 +259,9 @@ def _display_name_for(zone_id: str, boundary: dict, geojson: dict) -> str:
 
 
 def main() -> None:
-    st.title("🏘️ DC Neighborhood Analysis")
+    st.title("🏬 DC Neighborhood Analysis")
 
-    # ── Boundary type toggle ──────────────────────────────────────────────────
-    boundary_key = st.radio(
-        "Boundary definition",
-        options=list(_BOUNDARY_OPTIONS.keys()),
-        format_func=lambda k: _BOUNDARY_OPTIONS[k]["label"],
-        horizontal=True,
-        label_visibility="collapsed",
-    )
-    boundary = _BOUNDARY_OPTIONS[boundary_key]
-
-    # ── Month filter ──────────────────────────────────────────────────────────
+    # ── Data availability ─────────────────────────────────────────────────────
     months = get_available_months()
     if not months:
         st.error("No data available. Run `scripts/refresh_pipeline.sh` first.")
@@ -260,20 +276,29 @@ def main() -> None:
     st.session_state.setdefault("nbhd_map_key",     0)      # incremented to reset Plotly state
     st.session_state.setdefault("nbhd_boundary",    None)
 
-    # Clear selection when the boundary type changes.
-    if st.session_state["nbhd_boundary"] != boundary_key:
-        st.session_state["nbhd_selected"] = None
-        st.session_state["nbhd_map_key"] += 1
-        st.session_state["nbhd_boundary"] = boundary_key
-
     is_range = st.session_state["nbhd_is_range"]
 
+    # ── Filter row ────────────────────────────────────────────────────────────
+    # Boundary · month(s) · Multi-month toggle · Color map by — all on one line
+    # for a uniform filter bar. Bottom-align so the toggle switch lines up with
+    # the selectbox inputs.
     if is_range:
-        cols = st.columns([2, 2, 1])
-        start_col, end_col, toggle_col = cols
+        boundary_col, start_col, end_col, toggle_col, color_col = st.columns(
+            [2, 2, 2, 1, 2], vertical_alignment="bottom"
+        )
     else:
-        cols = st.columns([3, 1])
-        single_col, toggle_col = cols
+        boundary_col, single_col, toggle_col, color_col = st.columns(
+            [2, 3, 1, 2], vertical_alignment="bottom"
+        )
+
+    with boundary_col:
+        boundary_key = st.selectbox(
+            "Boundary",
+            options=list(_BOUNDARY_OPTIONS.keys()),
+            format_func=lambda k: _BOUNDARY_OPTIONS[k]["label"],
+            key="nbhd_boundary_select",
+        )
+    boundary = _BOUNDARY_OPTIONS[boundary_key]
 
     if is_range:
         with start_col:
@@ -304,9 +329,25 @@ def main() -> None:
             m_start = m_end = chosen
 
     with toggle_col:
-        st.session_state["nbhd_is_range"] = st.toggle(
-            "Multi-month", value=is_range
+        # Keyed toggle: binding to session_state means the new value is already
+        # present at the top of the next rerun, so the month columns switch
+        # between single/range with no one-click lag.
+        is_range = st.toggle("Multi-month", key="nbhd_is_range")
+
+    with color_col:
+        metric_key = st.selectbox(
+            "Color map by",
+            options=list(_METRICS.keys()),
+            format_func=lambda k: _METRICS[k]["label"],
+            key="nbhd_color_metric",
         )
+
+    # Clear selection when the boundary type changes (zone_ids differ per
+    # boundary, so a stale selection would no longer match any feature).
+    if st.session_state["nbhd_boundary"] != boundary_key:
+        st.session_state["nbhd_selected"] = None
+        st.session_state["nbhd_map_key"] += 1
+        st.session_state["nbhd_boundary"] = boundary_key
 
     st.divider()
 
@@ -325,92 +366,137 @@ def main() -> None:
         st.session_state["nbhd_selected"] = None
         st.session_state["nbhd_map_key"] += 1
 
-    # ── Sidebar: metric selector + detail card ───────────────────────────────
+    # ── Responsive layout ─────────────────────────────────────────────────────
+    # Wide screens: stats panel on the left, map on the right (side by side).
+    # Narrow screens (≤768px): the CSS below flips the flex container to a
+    # column and pushes the stats panel *below* the map, so the visible order
+    # becomes map → stats → table.
+    #
+    # DOM order is stats-first, which makes the wide-screen default ("stats
+    # left, map right") work with no CSS. The media query only reorders the
+    # narrow case. It's scoped with :has(.resp-map-marker) — an invisible span
+    # rendered inside the map column — so it targets *only* this layout block,
+    # not the filter-row columns or the detail card's inner columns.
+    st.markdown(
+        """
+        <style>
+        @media (max-width: 1300px) {
+          div[data-testid="stHorizontalBlock"]:has(.resp-map-marker) {
+            flex-direction: column;
+          }
+          div[data-testid="stHorizontalBlock"]:has(.resp-map-marker)
+            > div[data-testid="stColumn"] {
+            width: 100% !important;
+            flex: 1 1 100% !important;
+          }
+          div[data-testid="stHorizontalBlock"]:has(.resp-map-marker)
+            > div[data-testid="stColumn"]:first-child {
+            order: 2;
+          }
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    # Blue accent on expander headers (the collapsible "Trip flow" /
+    # "Neighborhood context" sections and the full table), matching MAP_BLUE.
+    st.markdown(
+        f"""
+        <style>
+        [data-testid="stExpander"] summary {{ color: {MAP_BLUE}; }}
+        [data-testid="stExpander"] summary svg {{ fill: {MAP_BLUE}; }}
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    stats_col, map_col = st.columns([2, 3], gap="large")
+
     # The ✕ button and hint text live inside detail_placeholder, which is
     # filled after all events are processed — so they always reflect the
     # current selection in a single run with no extra rerun.
-    with st.sidebar:
-        metric_key = st.selectbox(
-            "Color map by",
-            options=list(_METRICS.keys()),
-            format_func=lambda k: _METRICS[k]["label"],
-        )
-        st.divider()
+    with stats_col:
         detail_placeholder = st.empty()
 
-    # ── Map ───────────────────────────────────────────────────────────────────
-    p95 = df[metric_key].quantile(0.95)
-    p05 = df[metric_key].quantile(0.05)
+    with map_col:
+        # Invisible marker — the responsive CSS above keys off this to scope
+        # itself to this specific stHorizontalBlock.
+        st.markdown('<span class="resp-map-marker"></span>', unsafe_allow_html=True)
 
-    fig = px.choropleth_mapbox(
-        df,
-        geojson=geojson,
-        locations="zone_id",
-        featureidkey=boundary["feature_key"],
-        color=metric_key,
-        color_continuous_scale="Blues",
-        range_color=[p05, p95],
-        hover_name="zone_id",
-        hover_data={
-            "total_rides":            True,
-            "rides_per_km2":          True,
-            "rides_per_1k_residents": True,
-            "member_pct":             True,
-            "zone_id":                False,
-        },
-        labels={
-            "total_rides":            "Total rides",
-            "rides_per_km2":          "Rides/km²",
-            "rides_per_1k_residents": "Rides/1k residents",
-            "member_pct":             "Member %",
-        },
-        mapbox_style="open-street-map",
-        zoom=11.2,
-        center={"lat": 38.907, "lon": -77.036},
-        opacity=0.70,
-        height=660,
-    )
+        # ── Map ────────────────────────────────────────────────────────────────
+        p95 = df[metric_key].quantile(0.95)
+        p05 = df[metric_key].quantile(0.05)
 
-    # White polygon outline marks the selected zone — works for both map and
-    # table-driven selections without adding a dot.
-    if selected:
-        lats, lons = _polygon_outline(selected, geojson, boundary["feature_key"])
-        if lats:
-            fig.add_trace(go.Scattermapbox(
-                lat=lats, lon=lons,
-                mode="lines",
-                line=dict(width=3, color="#FFFFFF"),
-                hoverinfo="skip",
-                showlegend=False,
-            ))
+        fig = px.choropleth_mapbox(
+            df,
+            geojson=geojson,
+            locations="zone_id",
+            featureidkey=boundary["feature_key"],
+            color=metric_key,
+            color_continuous_scale="Blues",
+            range_color=[p05, p95],
+            hover_name="zone_id",
+            hover_data={
+                "total_rides":            True,
+                "rides_per_km2":          True,
+                "rides_per_1k_residents": True,
+                "member_pct":             True,
+                "zone_id":                False,
+            },
+            labels={
+                "total_rides":            "Total rides",
+                "rides_per_km2":          "Rides/km²",
+                "rides_per_1k_residents": "Rides/1k residents",
+                "member_pct":             "Member %",
+            },
+            mapbox_style="open-street-map",
+            zoom=11.2,
+            center={"lat": 38.907, "lon": -77.036},
+            opacity=0.70,
+            height=660,
+        )
 
-    fig.update_layout(
-        paper_bgcolor=BACKGROUND,
-        margin=dict(l=0, r=0, t=0, b=0),
-        coloraxis_colorbar=dict(
-            title=_METRICS[metric_key]["label"],
-            thickness=14,
-            len=0.5,
-            bgcolor="rgba(14,17,23,0.85)",
-            tickfont=dict(color=TEXT),
-            titlefont=dict(color=TEXT),
-        ),
-    )
+        # White polygon outline marks the selected zone — works for both map and
+        # table-driven selections without adding a dot.
+        if selected:
+            lats, lons = _polygon_outline(selected, geojson, boundary["feature_key"])
+            if lats:
+                fig.add_trace(go.Scattermapbox(
+                    lat=lats, lon=lons,
+                    mode="lines",
+                    line=dict(width=3, color="#FFFFFF"),
+                    hoverinfo="skip",
+                    showlegend=False,
+                ))
 
-    event = st.plotly_chart(
-        fig,
-        use_container_width=True,
-        on_select="rerun",
-        key=f"nbhd_map_{boundary_key}_{st.session_state['nbhd_map_key']}",
-    )
+        fig.update_layout(
+            paper_bgcolor=BACKGROUND,
+            margin=dict(l=0, r=0, t=0, b=0),
+            coloraxis_colorbar=dict(
+                title=_METRICS[metric_key]["label"],
+                thickness=14,
+                len=0.5,
+                bgcolor="rgba(14,17,23,0.85)",
+                tickfont=dict(color=TEXT),
+                titlefont=dict(color=TEXT),
+            ),
+        )
 
-    # Map click — rerun so the outline and ✕ button are consistent.
-    if event and event.selection and event.selection.points:
-        clicked = event.selection.points[0].get("location")
-        if clicked and clicked != st.session_state["nbhd_selected"]:
-            st.session_state["nbhd_selected"] = clicked
-            st.session_state["nbhd_map_key"] += 1
-            st.rerun()
+        event = st.plotly_chart(
+            fig,
+            use_container_width=True,
+            on_select="rerun",
+            key=f"nbhd_map_{boundary_key}_{st.session_state['nbhd_map_key']}",
+        )
+
+        # Map click — rerun so the outline and ✕ button are consistent.
+        if event and event.selection and event.selection.points:
+            clicked = event.selection.points[0].get("location")
+            if clicked and clicked != st.session_state["nbhd_selected"]:
+                st.session_state["nbhd_selected"] = clicked
+                st.session_state["nbhd_map_key"] += 1
+                st.rerun()
 
     # ── Full table with clickable rows ────────────────────────────────────────
     with st.expander("Full table — all neighbourhoods"):

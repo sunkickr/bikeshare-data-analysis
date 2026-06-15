@@ -147,17 +147,20 @@ For architecture / module structure, see [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## DC Neighborhood Analysis page (`pages/10_DC_Neighborhood_Analysis.py`)
 
-### F24. DC choropleth map with boundary toggle
-- Choropleth map of DC colored by the selected metric, with a radio toggle between two boundary definitions: **OSM Neighborhoods (117)** and **Planning Clusters (39)**.
-- Metric selector in the sidebar: total rides, rides/km², rides/1k residents, member %, avg trip duration.
+### F24. DC choropleth map with boundary selector
+- Choropleth map of DC colored by the selected metric. A single **filter row** holds all controls on one line: **Boundary** selectbox, the **month** filter (single or Start/End), a **Multi-month** toggle, and **Color map by** — for a uniform filter bar.
+- The Boundary selectbox chooses between four definitions: **OSM Neighborhoods (117)**, **Planning Clusters (39)**, **Census Tracts (206)**, and **Block Groups (571)** (`key="nbhd_boundary_select"`). Changing it clears any active zone selection, since zone_ids differ per boundary.
+- "Color map by" metric options: total rides, rides/km², rides/1k residents, member %, avg trip duration, e-bike %, round trip %, night owl %, rides/station. Its value persists across the Multi-month toggle via `key="nbhd_color_metric"`.
 - Color scale clamped to the p05–p95 range so outlier zones don't wash out the rest of the map.
-- Clicking a zone outlines it in white and populates a detail card in the sidebar.
+- Clicking a zone outlines it in white and populates a detail card in the on-page **stats panel** (no longer the sidebar).
+- **Responsive layout:** on wide screens the stats panel sits to the *left* of the map (side by side); on narrow screens (≤1300px) a media query reorders the flex container so the map is on top, the stats panel below it, then the full table. The CSS is scoped via `:has(.resp-map-marker)` (an invisible span in the map column) so it only affects this layout block.
 - Basemap: `open-street-map` (light background chosen to make colored polygons pop; differs intentionally from the `carto-darkmatter` basemap used on Stations & Routes).
 - **What could break:** the page reads GeoJSON from `data/geo/dc_neighborhoods_osm.geojson` and `data/geo/dc_clusters.geojson` via absolute path relative to the page file — moving the page file or the `data/geo/` folder breaks the load. The `_load_geojson` cache has no TTL (files are static); the `_load_data` query cache is `ttl=3600`.
 
 ### F25. Click-to-drill neighborhood detail card
-- Selecting a zone (by map click or table row click) shows a detail card in the sidebar with 8 metrics: total rides, member %, rides/km², rides/1k residents, avg duration, area, population, and median household income.
-- Selection is stored in `st.session_state["nbhd_selected"]`; clearing it via the ✕ button resets both the sidebar card and the white polygon outline in a single rerun.
+- Selecting a zone (by map click or table row click) shows a detail card in the on-page stats panel, grouped into five sections: **Rides summary** (total rides, member %, e-bike %), **Normalised activity** (rides/km², rides/1k residents, rides/station), **Usage patterns** (round trip %, night owl %, avg duration), and two **collapsed-by-default expanders** — **Trip flow** (departures, arrivals, net inflow) and **Neighborhood context** (residents, median HH income, area km²).
+- **Blue accent:** the zone title, section headers, and expander labels use `MAP_BLUE` (`#4292C6`, a mid-tone from the map's "Blues" choropleth scale), so the page accent matches the polygon fills — same convention as the per-award accent on the Neighborhood Rankings page.
+- Selection is stored in `st.session_state["nbhd_selected"]`; clearing it via the ✕ button resets both the stats-panel card and the white polygon outline in a single rerun.
 - **What could break:** the zone's `zone_id` in the data must match the GeoJSON feature's property key exactly (e.g. `neighborhood_name` for OSM, `cluster_id` for clusters). A seed or GeoJSON update that renames or reformats these keys silently stops the outline and detail card from appearing for affected zones.
 
 ### F26. NYC Neighborhoods exploration page (`pages/5_NYC_Neighborhoods.py`)

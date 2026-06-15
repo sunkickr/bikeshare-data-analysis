@@ -32,7 +32,7 @@ apply_plotly_defaults()
 _REPO_ROOT = Path(__file__).parent.parent.parent
 _GEOJSON_PATH = _REPO_ROOT / "data" / "geo" / "dc_neighborhoods_osm.geojson"
 _FEATURE_KEY = "properties.neighborhood_name"
-_RUNNER_UPS = 3
+_RUNNER_UPS = 4
 
 # ═════════════════════════════════════════════════════════════════════════════
 # RANKING ELIGIBILITY — edit these to explore. All ranking policy lives here and
@@ -101,7 +101,7 @@ class Superlative:
 SUPERLATIVES: list[Superlative] = [
     Superlative(
         "Superior Bike Neighborhood",
-        "Probably the biggest, densest neighborhood — can't deny them!",
+        "Probably the biggest, densest neighborhood. Can't deny them!",
         "total_rides", False, "rides", _fmt_count,
     ),
     Superlative(
@@ -136,7 +136,7 @@ SUPERLATIVES: list[Superlative] = [
     ),
     Superlative(
         "Ebike Lovers",
-        "They've got places to be — no time for slow bikes!",
+        "They've got places to be and no time for slow bikes!",
         "electric_pct", False, "e-bike rides", _fmt_pct,
     ),
 ]
