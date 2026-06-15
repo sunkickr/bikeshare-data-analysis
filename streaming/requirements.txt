@@ -1,0 +1,9 @@
+# Streaming pipeline deps (Phase 1 producer, Phase 2 consumer).
+# Install into the repo venv:  .venv/bin/pip install -r streaming/requirements.txt
+#
+# NOTE: producer.py --dry-run needs NONE of these (it uses stdlib urllib),
+# so you can verify the GBFS half before installing anything or signing up.
+
+confluent-kafka==2.6.1     # Kafka client (data plane) + Schema Registry serializers
+jsonschema==4.23.0         # required by confluent-kafka's JSONSerializer
+psycopg2-binary==2.9.10    # consumer -> local Postgres (Phase 2); matches dashboard pin
