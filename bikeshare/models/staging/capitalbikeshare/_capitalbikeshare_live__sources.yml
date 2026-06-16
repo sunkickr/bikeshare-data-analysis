@@ -1,0 +1,38 @@
+version: 2
+
+# Live GBFS station feeds, landed by streaming/consumer.py from Confluent Kafka.
+# Deliberately a SEPARATE source from `capitalbikeshare` (trips): that one is
+# completed rides on a monthly batch cadence; this is real-time station STATE
+# updating ~every 60s. Keeping them separate means the trips source keeps its
+# monthly freshness rules and the two pipelines never entangle.
+#
+# Models reference these via {{ source('capitalbikeshare_live', '...') }}.
+
+sources:
+  - name: capitalbikeshare_live
+    description: |
+      Live GBFS station_status / station_information for Capital Bikeshare,
+      streamed Kafka -> Postgres. Real-time station state, not rides.
+    database: bikeshare
+    schema: raw
+
+    # No freshness rule on purpose: the consumer runs in bursts (it's opt-in,
+    # not a 24/7 daemon), so "stale" is the normal resting state and an alert
+    # would be meaningless. Add freshness later if the stream becomes always-on.
+    tables:
+      - name: station_status
+        identifier: cabi_station_status
+        description: One row per station per ~60s snapshot. Append-only, month-partitioned.
+        columns:
+          - name: station_id
+            description: GBFS station UUID.
+          - name: snapshot_ts
+            description: Feed-level last_updated (epoch seconds) — the canonical snapshot bucket.
+      - name: station_information
+        identifier: cabi_station_information
+        description: One row per station, latest attributes (upserted). lat/lon source of truth.
+        columns:
+          - name: station_id
+            description: GBFS station UUID (primary key in raw).
+          - name: short_name
+            description: Numeric station code — bridges to the trips world's station_id.

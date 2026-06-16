@@ -1,0 +1,60 @@
+version: 2
+
+models:
+  - name: dim_cabi_stations
+    description: |
+      One row per live CABI station — latest name, coordinates, capacity.
+      Live-side coordinate source of truth (parallel to trip-derived dim_stations).
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - system
+              - station_id
+    columns:
+      - name: station_id
+        tests:
+          - not_null
+      - name: system
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['capitalbikeshare']
+      - name: lat
+        tests:
+          - not_null
+      - name: lon
+        tests:
+          - not_null
+
+  - name: fct_cabi_station_status
+    description: |
+      One row per station per ~60s snapshot (incremental append). The live
+      availability time series; bucket on snapshot_at.
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - station_id
+              - snapshot_ts
+    columns:
+      - name: station_id
+        tests:
+          - not_null
+      - name: snapshot_at
+        tests:
+          - not_null
+      - name: num_bikes_available
+        tests:
+          - not_null
+
+  - name: agg_cabi_station_availability
+    description: |
+      Current availability per station (latest snapshot + geo). The model the
+      live map reads. One row per station.
+    columns:
+      - name: station_id
+        tests:
+          - not_null
+          - unique
