@@ -84,9 +84,12 @@ def information_records(feed: dict) -> Iterator[dict]:
         }
 
 
+SCHEMA_DIR = Path(__file__).resolve().parent / "schemas"
+
+# feed -> (url, topic, record-builder, schema filename)
 FEEDS = {
-    "status": (STATUS_URL, TOPIC_STATUS, status_records),
-    "information": (INFORMATION_URL, TOPIC_INFORMATION, information_records),
+    "status": (STATUS_URL, TOPIC_STATUS, status_records, "station_status.schema.json"),
+    "information": (INFORMATION_URL, TOPIC_INFORMATION, information_records, "station_information.schema.json"),
 }
 
 
@@ -94,7 +97,7 @@ FEEDS = {
 # Dry run
 # --------------------------------------------------------------------------- #
 def run_dry(feed_name: str) -> None:
-    url, topic, builder = FEEDS[feed_name]
+    url, topic, builder, _schema = FEEDS[feed_name]
     feed = fetch_feed(url)
     records = list(builder(feed))
     print(f"[{feed_name}] would produce {len(records)} records to topic '{topic}'")
@@ -140,15 +143,46 @@ def _build_producer():
     )
 
 
-def produce_once(producer, feed_name: str) -> int:
-    url, topic, builder = FEEDS[feed_name]
+def _build_serializers(feeds: list[str]) -> dict:
+    """One JSONSerializer per feed, backed by Schema Registry. Serializing a record
+    both VALIDATES it against streaming/schemas/*.json and REGISTERS the schema under
+    subject '<topic>-value' on first use (auto-registration)."""
+    from confluent_kafka.schema_registry import SchemaRegistryClient
+    from confluent_kafka.schema_registry.json_schema import JSONSerializer
+
+    url = os.environ.get("SCHEMA_REGISTRY_URL")
+    key = os.environ.get("SCHEMA_REGISTRY_API_KEY")
+    secret = os.environ.get("SCHEMA_REGISTRY_API_SECRET")
+    missing = [n for n, v in [
+        ("SCHEMA_REGISTRY_URL", url),
+        ("SCHEMA_REGISTRY_API_KEY", key),
+        ("SCHEMA_REGISTRY_API_SECRET", secret),
+    ] if not v]
+    if missing:
+        sys.exit(
+            f"Missing Schema Registry credentials in .env: {', '.join(missing)}.\n"
+            "See streaming/README.md (Phase 1 step 2) or use --dry-run."
+        )
+    client = SchemaRegistryClient({"url": url, "basic.auth.user.info": f"{key}:{secret}"})
+    return {
+        feed_name: JSONSerializer((SCHEMA_DIR / FEEDS[feed_name][3]).read_text(), client)
+        for feed_name in feeds
+    }
+
+
+def produce_once(producer, serializers, feed_name: str) -> int:
+    from confluent_kafka.serialization import SerializationContext, MessageField
+
+    url, topic, builder, _schema = FEEDS[feed_name]
+    serializer = serializers[feed_name]
+    ctx = SerializationContext(topic, MessageField.VALUE)
     feed = fetch_feed(url)
     count = 0
     for record in builder(feed):
         producer.produce(
             topic=topic,
-            key=record["station_id"],          # keying enables log compaction later
-            value=json.dumps(record).encode("utf-8"),
+            key=record["station_id"].encode("utf-8"),   # keying enables log compaction later
+            value=serializer(record, ctx),               # validates + prefixes the schema id (wire format)
         )
         count += 1
     producer.flush()
@@ -159,10 +193,11 @@ def produce_once(producer, feed_name: str) -> int:
 def run_produce(feeds: list[str], loop: bool) -> None:
     _load_dotenv()
     producer = _build_producer()
+    serializers = _build_serializers(feeds)
     while True:
         for feed_name in feeds:
             try:
-                produce_once(producer, feed_name)
+                produce_once(producer, serializers, feed_name)
             except Exception as exc:  # one bad poll shouldn't kill the loop
                 print(f"[{feed_name}] poll failed: {exc}", file=sys.stderr)
         if not loop:

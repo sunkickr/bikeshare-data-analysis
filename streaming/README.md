@@ -81,8 +81,32 @@ This part is yours to do (account creation + key custody can't be automated).
 .venv/bin/python streaming/producer.py            # poll forever, every 60s
 ```
 
-Confirm with the CLI consumer from Phase 0. Next: register the JSON Schemas in
-`streaming/schemas/` to Schema Registry (Phase 1 step 2).
+Confirm with the CLI consumer from Phase 0.
+
+### Phase 1 step 2 — Schema Registry
+
+Schema Registry is a separate service from the Kafka cluster (often a different
+region) and needs its own API key. The producer reads the JSON Schemas in
+`streaming/schemas/`, validates every record against them, and auto-registers each
+schema under subject `<topic>-value` on first produce.
+
+```bash
+confluent schema-registry cluster describe        # get the Endpoint URL + cluster id (lsrc-...)
+confluent api-key create --resource <lsrc-...>     # mint an SR-specific key
+```
+
+Add to `.env`:
+```
+SCHEMA_REGISTRY_URL=https://psrc-xxxxx.<region>.<cloud>.confluent.cloud
+SCHEMA_REGISTRY_API_KEY=<sr key>
+SCHEMA_REGISTRY_API_SECRET=<sr secret>
+```
+
+Then re-run the producer. Messages are now in Schema Registry **wire format**
+(a magic byte + schema id prefix the JSON), so to read them back with the CLI use:
+```bash
+confluent kafka topic consume cabi.station_status --value-format jsonschema --from-beginning
+```
 
 ## Phase 2 — Consumer → local Postgres (coming next)
 
