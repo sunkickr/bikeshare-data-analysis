@@ -6,4 +6,5 @@
 
 confluent-kafka==2.6.1     # Kafka client (data plane) + Schema Registry serializers
 jsonschema==4.23.0         # required by confluent-kafka's JSONSerializer
+fastavro>=1.10             # required by confluent-kafka's AvroDeserializer (Flink sink topic); 1.10+ ships py3.13 wheels
 psycopg2-binary==2.9.10    # consumer -> local Postgres (Phase 2); matches dashboard pin

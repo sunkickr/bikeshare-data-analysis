@@ -2,10 +2,14 @@
 """
 Kafka -> local Postgres consumer for the live CABI station map (Phase 2).
 
-Reads both topics in a consumer group, deserializes via Schema Registry (the decode
+Reads three topics in a consumer group, deserializes via Schema Registry (the decode
 side of the producer's serializer), and writes to local Postgres:
-  - station_status      -> raw.cabi_station_status        (append, month-partitioned)
-  - station_information -> raw.cabi_station_information    (upsert latest on station_id)
+  - station_status      -> raw.cabi_station_status        (append, month-partitioned)  [JSON]
+  - station_information -> raw.cabi_station_information    (upsert latest on station_id) [JSON]
+  - station_status_5min -> raw.cabi_station_status_5min    (upsert on window)            [AVRO, Flink]
+
+Two formats on purpose: our producer emits JSON Schema, Flink's sink emits Avro. The
+consumer picks the right deserializer per topic.
 
 This is a long-running process. Stop it with Ctrl-C (it flushes + commits offsets
 cleanly on the way out). Postgres only changes while this is running.
@@ -36,6 +40,7 @@ import os  # noqa: E402
 GROUP_ID = "cabi-postgres-sink"
 BATCH_SIZE = 500
 PROFILES_PATH = Path.home() / ".dbt" / "profiles.yml"
+TOPIC_STATUS_5MIN = "cabi.station_status_5min"  # Flink CTAS sink (Avro)
 
 _running = True  # flipped by SIGINT/SIGTERM for a clean shutdown
 
@@ -76,10 +81,12 @@ def _build_consumer(offset_reset: str):
 
 
 def _build_deserializers() -> dict:
-    """One JSONDeserializer per topic, validating against the same schema files
-    the producer registered. Maps topic name -> deserializer."""
+    """Maps topic name -> deserializer. JSON for the topics our producer writes,
+    Avro for the Flink sink. The Avro deserializer fetches the writer schema from
+    the registry by the schema id embedded in each message."""
     from confluent_kafka.schema_registry import SchemaRegistryClient
     from confluent_kafka.schema_registry.json_schema import JSONDeserializer
+    from confluent_kafka.schema_registry.avro import AvroDeserializer
 
     for k in ("SCHEMA_REGISTRY_URL", "SCHEMA_REGISTRY_API_KEY", "SCHEMA_REGISTRY_API_SECRET"):
         if not os.environ.get(k):
@@ -92,6 +99,7 @@ def _build_deserializers() -> dict:
     for feed_name, (_url, topic, _builder, schema_file) in FEEDS.items():
         schema_str = (SCHEMA_DIR / schema_file).read_text()
         out[topic] = JSONDeserializer(schema_str, schema_registry_client=client)
+    out[TOPIC_STATUS_5MIN] = AvroDeserializer(client)
     return out
 
 
@@ -116,6 +124,15 @@ def _info_row(rec: dict) -> tuple:
     )
 
 
+def _fivemin_row(rec: dict) -> tuple:
+    # Avro decodes window_start/window_end (local-timestamp-millis) to datetime.
+    return (
+        rec["station_id"], rec["window_start"], rec["window_end"],
+        rec.get("num_snapshots"), rec.get("avg_bikes"), rec.get("min_bikes"),
+        rec.get("max_bikes"), rec.get("bikes_swing"),
+    )
+
+
 # --------------------------------------------------------------------------- #
 # Postgres writes
 # --------------------------------------------------------------------------- #
@@ -133,12 +150,25 @@ def _ensure_partitions(cur, status_rows: list[tuple]) -> None:
         )
 
 
-def _flush(conn, consumer, status_buf: list, info_buf: list) -> tuple[int, int]:
+def _flush(conn, consumer, status_buf: list, info_buf: list, fivemin_buf: list) -> tuple[int, int, int]:
     from psycopg2.extras import execute_values
 
-    if not status_buf and not info_buf:
-        return (0, 0)
+    if not status_buf and not info_buf and not fivemin_buf:
+        return (0, 0, 0)
     with conn.cursor() as cur:
+        if fivemin_buf:
+            execute_values(
+                cur,
+                "INSERT INTO raw.cabi_station_status_5min "
+                "(station_id, window_start, window_end, num_snapshots, avg_bikes, "
+                " min_bikes, max_bikes, bikes_swing) VALUES %s "
+                "ON CONFLICT (station_id, window_start) DO UPDATE SET "
+                "  window_end = EXCLUDED.window_end, num_snapshots = EXCLUDED.num_snapshots, "
+                "  avg_bikes = EXCLUDED.avg_bikes, min_bikes = EXCLUDED.min_bikes, "
+                "  max_bikes = EXCLUDED.max_bikes, bikes_swing = EXCLUDED.bikes_swing, "
+                "  _ingested_at = now()",
+                fivemin_buf,
+            )
         if info_buf:
             execute_values(
                 cur,
@@ -165,9 +195,10 @@ def _flush(conn, consumer, status_buf: list, info_buf: list) -> tuple[int, int]:
             )
     conn.commit()                          # DB write durable first...
     consumer.commit(asynchronous=False)    # ...then advance Kafka offsets (at-least-once)
-    n = (len(status_buf), len(info_buf))
+    n = (len(status_buf), len(info_buf), len(fivemin_buf))
     status_buf.clear()
     info_buf.clear()
+    fivemin_buf.clear()
     return n
 
 
@@ -192,13 +223,14 @@ def main() -> None:
     consumer = _build_consumer(args.offset_reset)
     deserializers = _build_deserializers()
     conn = _connect_pg()
-    consumer.subscribe([TOPIC_STATUS, TOPIC_INFORMATION])
+    consumer.subscribe([TOPIC_STATUS, TOPIC_INFORMATION, TOPIC_STATUS_5MIN])
 
     from confluent_kafka.serialization import SerializationContext, MessageField
 
     status_buf: list[tuple] = []
     info_buf: list[tuple] = []
-    total_status = total_info = skipped = 0
+    fivemin_buf: list[tuple] = []
+    total_status = total_info = total_fivemin = skipped = 0
     empty_polls = 0
 
     print(f"consumer '{GROUP_ID}' started (offset_reset={args.offset_reset}, drain={args.drain}). Ctrl-C to stop.")
@@ -206,11 +238,12 @@ def main() -> None:
         while _running:
             msg = consumer.poll(1.0)
             if msg is None:
-                s, i = _flush(conn, consumer, status_buf, info_buf)
+                s, i, f = _flush(conn, consumer, status_buf, info_buf, fivemin_buf)
                 total_status += s
                 total_info += i
+                total_fivemin += f
                 empty_polls += 1
-                if args.drain and (total_status + total_info) > 0 and empty_polls >= 3:
+                if args.drain and (total_status + total_info + total_fivemin) > 0 and empty_polls >= 3:
                     break
                 continue
             empty_polls = 0
@@ -226,20 +259,24 @@ def main() -> None:
                 continue
             if msg.topic() == TOPIC_STATUS:
                 status_buf.append(_status_row(rec))
-            else:
+            elif msg.topic() == TOPIC_INFORMATION:
                 info_buf.append(_info_row(rec))
-            if len(status_buf) + len(info_buf) >= BATCH_SIZE:
-                s, i = _flush(conn, consumer, status_buf, info_buf)
+            else:  # TOPIC_STATUS_5MIN
+                fivemin_buf.append(_fivemin_row(rec))
+            if len(status_buf) + len(info_buf) + len(fivemin_buf) >= BATCH_SIZE:
+                s, i, f = _flush(conn, consumer, status_buf, info_buf, fivemin_buf)
                 total_status += s
                 total_info += i
+                total_fivemin += f
     finally:
-        s, i = _flush(conn, consumer, status_buf, info_buf)
+        s, i, f = _flush(conn, consumer, status_buf, info_buf, fivemin_buf)
         total_status += s
         total_info += i
+        total_fivemin += f
         consumer.close()
         conn.close()
-        print(f"\nstopped. wrote {total_status} status rows, {total_info} information rows; "
-              f"skipped {skipped} undecodable messages.")
+        print(f"\nstopped. wrote {total_status} status rows, {total_info} information rows, "
+              f"{total_fivemin} 5min-flow rows; skipped {skipped} undecodable messages.")
 
 
 if __name__ == "__main__":

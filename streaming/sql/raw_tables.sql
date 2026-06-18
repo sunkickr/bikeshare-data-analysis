@@ -35,3 +35,20 @@ CREATE TABLE IF NOT EXISTS raw.cabi_station_status (
     is_returning         smallint,
     _ingested_at         timestamptz NOT NULL DEFAULT now()
 ) PARTITION BY RANGE (snapshot_at);
+
+-- Flink-derived windowed flow (Phase 4): one row per station per time window,
+-- computed by a Confluent Flink SQL standing query and landed by consumer.py.
+-- Low volume (one row per station per window), so not partitioned. PK makes
+-- re-consumption idempotent.
+CREATE TABLE IF NOT EXISTS raw.cabi_station_status_5min (
+    station_id    text      NOT NULL,
+    window_start  timestamp NOT NULL,
+    window_end    timestamp NOT NULL,
+    num_snapshots integer,
+    avg_bikes     integer,
+    min_bikes     integer,
+    max_bikes     integer,
+    bikes_swing   integer,
+    _ingested_at  timestamptz NOT NULL DEFAULT now(),
+    PRIMARY KEY (station_id, window_start)
+);

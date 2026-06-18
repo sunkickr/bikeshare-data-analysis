@@ -36,3 +36,14 @@ sources:
             description: GBFS station UUID (primary key in raw).
           - name: short_name
             description: Numeric station code — bridges to the trips world's station_id.
+      - name: station_status_5min
+        identifier: cabi_station_status_5min
+        description: |
+          Windowed availability flow per station, computed by a Confluent Flink SQL
+          standing query (TUMBLE window) and landed by the consumer. One row per
+          station per window. Avro on the wire (Flink's default), unlike the JSON feeds.
+        columns:
+          - name: station_id
+            description: GBFS station UUID.
+          - name: window_start
+            description: Start of the tumbling window (Flink event-time).
