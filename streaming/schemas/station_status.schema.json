@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "cabi_station_status",
+  "description": "One CABI station's live availability at a single GBFS poll. High-volume fact (append-only).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "station_id",
+    "snapshot_ts",
+    "num_bikes_available",
+    "num_docks_available"
+  ],
+  "properties": {
+    "station_id": { "type": "string", "description": "GBFS station UUID; the Kafka message key." },
+    "snapshot_ts": { "type": "integer", "description": "Feed-level last_updated (epoch seconds) — the canonical snapshot time bucket." },
+    "last_reported": { "type": "integer", "description": "When the station itself last reported (epoch seconds). Do NOT time-bucket on this." },
+    "num_bikes_available": { "type": "integer", "minimum": 0 },
+    "num_ebikes_available": { "type": "integer", "minimum": 0 },
+    "num_bikes_disabled": { "type": "integer", "minimum": 0 },
+    "num_docks_available": { "type": "integer", "minimum": 0 },
+    "num_docks_disabled": { "type": "integer", "minimum": 0 },
+    "is_installed": { "type": "integer", "enum": [0, 1] },
+    "is_renting": { "type": "integer", "enum": [0, 1] },
+    "is_returning": { "type": "integer", "enum": [0, 1] }
+  }
+}

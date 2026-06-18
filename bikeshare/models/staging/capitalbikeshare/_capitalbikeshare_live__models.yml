@@ -1,0 +1,49 @@
+version: 2
+
+models:
+  - name: stg_capitalbikeshare__station_status
+    description: |
+      Cleaned live availability snapshots — one row per station per ~60s poll.
+      Time-bucketed on snapshot_at (when we observed the system).
+    columns:
+      - name: station_id
+        tests:
+          - not_null
+      - name: snapshot_at
+        tests:
+          - not_null
+      - name: system
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['capitalbikeshare']
+
+  - name: stg_capitalbikeshare__station_information
+    description: |
+      Cleaned live station attributes (latest per station). lat/lon are the
+      source of truth for live-side coordinates.
+    columns:
+      - name: station_id
+        tests:
+          - not_null
+          - unique
+      - name: system
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['capitalbikeshare']
+
+  - name: stg_capitalbikeshare__station_status_5min
+    description: |
+      Cleaned Flink windowed flow — one row per station per window. The windowed
+      aggregation happened in Flink SQL; this just casts/tags.
+    columns:
+      - name: station_id
+        tests:
+          - not_null
+      - name: system
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['capitalbikeshare']

@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "cabi_station_information",
+  "description": "One CABI station's descriptive attributes. Slowly-changing dimension (upsert latest). lat/lon live here only.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["station_id", "snapshot_ts", "name", "lat", "lon"],
+  "properties": {
+    "station_id": { "type": "string", "description": "GBFS station UUID; the Kafka message key." },
+    "snapshot_ts": { "type": "integer", "description": "Feed-level last_updated (epoch seconds)." },
+    "name": { "type": "string" },
+    "short_name": { "type": ["string", "null"] },
+    "lat": { "type": "number" },
+    "lon": { "type": "number" },
+    "capacity": { "type": ["integer", "null"], "minimum": 0 },
+    "region_id": { "type": ["string", "null"] }
+  }
+}
