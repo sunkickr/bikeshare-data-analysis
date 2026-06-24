@@ -14,6 +14,57 @@ import streamlit as st
 from lib.db import run_query
 
 _CACHE_TTL = 3600   # 1 hour — dbt refreshes weekly
+_LIVE_TTL = 30      # live availability — short TTL so the auto-refresh sees fresh data
+
+
+@st.cache_data(ttl=_LIVE_TTL, show_spinner="Loading live availability…")
+def live_station_availability() -> pd.DataFrame:
+    """Current availability for every live CABI station (one row per station).
+
+    Reads analytics_marts.agg_cabi_station_availability (the streaming-fed mart).
+    NOTE on freshness: the consumer keeps raw current every ~60s, but this mart is
+    only as recent as the last `dbt build` of agg_cabi_station_availability — rebuild
+    it on a cadence for the map to actually move.
+    """
+    sql = """
+        SELECT
+            station_id, station_name, lat, lon, capacity,
+            num_bikes_available, num_ebikes_available, num_docks_available,
+            fill_ratio::float8 AS fill_ratio, is_renting, as_of
+        FROM analytics_marts.agg_cabi_station_availability
+    """
+    return run_query(sql)
+
+
+@st.cache_data(ttl=_LIVE_TTL, show_spinner=False)
+def live_station_changes() -> pd.DataFrame:
+    """Per station: change in available bikes between the two most recent snapshots
+    (~60s apart). bikes_delta > 0 = bikes returned, < 0 = bikes taken, 0/NULL = quiet.
+
+    Reads fct_cabi_station_status (the snapshot time series) and uses LAG to compare
+    the latest snapshot to the one before it.
+    """
+    sql = """
+        WITH ranked AS (
+            SELECT
+                station_id,
+                snapshot_at,
+                num_bikes_available,
+                LAG(num_bikes_available) OVER (
+                    PARTITION BY station_id ORDER BY snapshot_at
+                ) AS prev_bikes,
+                ROW_NUMBER() OVER (
+                    PARTITION BY station_id ORDER BY snapshot_at DESC
+                ) AS rn
+            FROM analytics_marts.fct_cabi_station_status
+        )
+        SELECT
+            station_id,
+            (num_bikes_available - prev_bikes) AS bikes_delta
+        FROM ranked
+        WHERE rn = 1
+    """
+    return run_query(sql)
 
 
 @st.cache_data(ttl=_CACHE_TTL, show_spinner="Loading rides…")

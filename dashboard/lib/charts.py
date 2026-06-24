@@ -355,6 +355,102 @@ def station_route_map(
     return fig
 
 
+def live_availability_map(df: pd.DataFrame, *, height: int = 560) -> go.Figure:
+    """Live CABI availability — one dot per station, colored by fill ratio
+    (red = empty → green = full) and sized by dock capacity.
+
+    If the frame carries a `bikes_delta` column, stations that changed since the
+    previous snapshot get a bright halo drawn behind them — so each auto-refresh
+    visibly flags where a bike was just taken or returned.
+
+    Reads agg_cabi_station_availability; coordinates trace back to dim_cabi_stations
+    through that mart. Same carto-darkmatter basemap as the Stations & Routes map.
+    """
+    pts = df.dropna(subset=["lat", "lon"]).copy()
+    pts["_size"] = _scale(pts["capacity"].fillna(pts["capacity"].median()), 6, 22)
+
+    has_delta = "bikes_delta" in pts.columns
+    delta = pts["bikes_delta"].fillna(0).astype(int) if has_delta else None
+
+    fig = go.Figure()
+
+    # Halo for stations that changed since the last snapshot — drawn FIRST so it
+    # sits behind the colored dot and reads as a glow around it.
+    show_legend = False
+    if has_delta:
+        changed = pts[delta != 0]
+        if not changed.empty:
+            show_legend = True
+            fig.add_trace(
+                go.Scattermapbox(
+                    lat=changed["lat"],
+                    lon=changed["lon"],
+                    mode="markers",
+                    marker=go.scattermapbox.Marker(
+                        size=(changed["_size"] + 14).tolist(),
+                        color="#F8FAFC",
+                        opacity=0.55,
+                    ),
+                    hoverinfo="skip",
+                    name="Changed since last update",
+                    showlegend=True,
+                )
+            )
+
+    # Main availability dots.
+    customdata = pts.assign(_delta=(delta if has_delta else 0))[
+        ["num_bikes_available", "num_ebikes_available", "num_docks_available", "capacity", "_delta"]
+    ].to_numpy()
+    fig.add_trace(
+        go.Scattermapbox(
+            lat=pts["lat"],
+            lon=pts["lon"],
+            mode="markers",
+            marker=go.scattermapbox.Marker(
+                size=pts["_size"].tolist(),
+                color=pts["fill_ratio"].astype(float),
+                colorscale=[[0.0, "#EF4444"], [0.5, "#FDE68A"], [1.0, "#86EFAC"]],
+                cmin=0.0,
+                cmax=1.0,
+                colorbar=dict(
+                    title=dict(text="Fill", font=dict(color=TEXT)),
+                    tickfont=dict(color=TEXT),
+                    thickness=12,
+                    len=0.5,
+                    bgcolor="rgba(14,17,23,0.6)",
+                ),
+                opacity=0.9,
+            ),
+            text=pts["station_name"],
+            customdata=customdata,
+            hovertemplate=(
+                "<b>%{text}</b><br>"
+                "%{customdata[0]} bikes (%{customdata[1]} e-bikes)<br>"
+                "%{customdata[2]} docks free · cap %{customdata[3]}<br>"
+                "Δ %{customdata[4]:+d} bikes since last update<extra></extra>"
+            ),
+            showlegend=False,
+        )
+    )
+
+    center_lat, center_lng = MAP_CENTER["capitalbikeshare"]
+    fig.update_layout(
+        mapbox=dict(
+            style="carto-darkmatter",
+            center=dict(lat=center_lat, lon=center_lng),
+            zoom=MAP_ZOOM,
+        ),
+        height=height,
+        margin=dict(l=0, r=0, t=0, b=0),
+        showlegend=show_legend,
+        legend=dict(
+            orientation="h", yanchor="bottom", y=0.02, xanchor="center", x=0.5,
+            bgcolor="rgba(14,17,23,0.7)", bordercolor=SURFACE, borderwidth=1,
+        ),
+    )
+    return fig
+
+
 def ranking_highlight_map(
     geojson: dict,
     *,
