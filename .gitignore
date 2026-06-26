@@ -34,6 +34,9 @@ profiles.yml
 .env
 .env.*
 
+# ── Directus demo (local install + node_modules + .env creds) ──
+directus/
+
 # ── macOS ─────────────────────────────────────────
 .DS_Store
 .AppleDouble
